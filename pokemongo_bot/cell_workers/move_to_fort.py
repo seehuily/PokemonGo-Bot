@@ -49,17 +49,17 @@ class MoveToFort(BaseTask):
             nearest_fort = self.get_nearest_fort()
             if nearest_fort is None:
                 rlat, rlng = self._get_random_spot_in_zone(self.bot.start_position[0], self.bot.start_position[1], self.zone_radius)
-                way_fort = self._get_nearest_fort_on_pos_way(rlat, rlng)
-                if way_fort is not None:
-                    self.recent_dest_fort = way_fort
-                    self.recent_dest_fortname = 'Way Fort to RP'
-                    self.bot.recent_forts = self.bot.recent_forts[1:] + [way_fort['id']]
-                else:
-                    self.recent_dest_fort = {'latitude':rlat, 'longitude':rlng}
-                    self.recent_dest_fortname = 'Random Point'
-                    self.bot.recent_forts = self.bot.recent_forts[1:] + ['0']
+                self.recent_dest_fort = {'latitude':rlat, 'longitude':rlng}
+                self.recent_dest_fortname = 'Random Point'
+                self.bot.recent_forts = self.bot.recent_forts[1:] + ['0']
                 self.bot.update_recent_forts()
+                return WorkerResult.RUNNING
 
+        if self.recent_dest_fortname == 'Random Point':
+            way_fort = self._get_nearest_fort_on_pos_way(self.recent_dest_fort['latitude'], self.recent_dest_fort['longitude'])
+            if way_fort is not None:
+                self.recent_dest_fort = way_fort
+                self.recent_dest_fortname = 'Way Fort to RP'
                 return WorkerResult.RUNNING
 
         lat = nearest_fort['latitude']
