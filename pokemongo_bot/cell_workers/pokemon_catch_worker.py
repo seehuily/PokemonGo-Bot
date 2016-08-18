@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import time
+import json
+import os
 from random import random, randrange
 from pokemongo_bot import inventory
 from pokemongo_bot.base_task import BaseTask
@@ -8,6 +10,7 @@ from pokemongo_bot.human_behaviour import sleep, action_delay
 from pokemongo_bot.inventory import Pokemon
 from pokemongo_bot.worker_result import WorkerResult
 from pokemongo_bot.datastore import Datastore
+from pokemongo_bot.base_dir import _base_dir
 
 CATCH_STATUS_SUCCESS = 1
 CATCH_STATUS_FAILED = 2
@@ -97,16 +100,30 @@ class PokemonCatchWorker(Datastore, BaseTask):
 
         # skip ignored pokemon
         if not self._should_catch_pokemon(pokemon):
-            return WorkerResult.SUCCESS
+            return WorkerResult.IGNORE
 
         is_vip = self._is_vip_pokemon(pokemon)
         if pokeballs < 1:
             if superballs < 1:
                 if ultraballs < 1:
-                    return WorkerResult.SUCCESS
+                    return WorkerResult.IGNORE
                 if not is_vip:
-                    return WorkerResult.SUCCESS
+                    return WorkerResult.IGNORE
         
+        user_web_catchable = os.path.join(_base_dir, 'web', 'catchable-{}.json'.format(self.bot.config.username))
+        try:
+            with open(user_web_catchable, 'w') as outfile:
+                cur_lat, cur_lng = self.bot.position[0:2]
+                cur_lng = pokemon_data.get('longitude', cur_lng)
+                cur_lat = pokemon_data.get('latitude', cur_lat)
+                pokemon_id = pokemon_data['pokemon_id']
+                spawn_point_id = int(random() * 99925893070)
+                spawn_point_id = pokemon_data.get('spawn_point_id', spawn_point_id)
+
+                json.dump({'pokemon_id': pokemon_id, 'longitude': cur_lng, 'latitude': cur_lat, 'spawn_point_id': spawn_point_id}, outfile)
+        except IOError as e:
+            errstr = '[x] Error while opening location file: catchable-.json'
+
         # log encounter
         self.emit_event(
             'pokemon_appeared',
@@ -137,6 +154,8 @@ class PokemonCatchWorker(Datastore, BaseTask):
 
         # simulate app
         time.sleep(5)
+
+        return WorkerResult.SUCCESS
 
     def create_encounter_api_call(self):
         encounter_id = self.pokemon['encounter_id']
@@ -445,6 +464,9 @@ class PokemonCatchWorker(Datastore, BaseTask):
                         'pokemon_id': pokemon.pokemon_id
                     }
                 )
+
+                # Add caught pokemon to new_pokemon_list for display
+                self.bot.add_to_new_pokemon_list(pokemon)
 
                 # We could refresh here too, but adding 3 saves a inventory request
                 candy = inventory.candies(True).get(pokemon.pokemon_id)

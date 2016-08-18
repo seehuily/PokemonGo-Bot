@@ -17,6 +17,10 @@ class MoveToFort(BaseTask):
         self.lure_attraction = self.config.get("lure_attraction", True)
         self.lure_max_distance = self.config.get("lure_max_distance", 2000)
         self.ignore_item_count = self.config.get("ignore_item_count", False)
+        self.bot_zone = self.config.get("bot_zone", False)
+        self.zone_radius = self.config.get("zone_radius", 1000)
+        self.recent_dest_fort = None
+        self.recent_dest_fortname = 'Unknown'
 
     def should_run(self):
         has_space_for_loot = inventory.Items.has_space_for_loot()
@@ -34,16 +38,25 @@ class MoveToFort(BaseTask):
         if not self.should_run():
             return WorkerResult.SUCCESS
 
-        nearest_fort = self.get_nearest_fort()
-
-        if nearest_fort is None:
-            return WorkerResult.SUCCESS
+        if self.recent_dest_fort:
+            nearest_fort = self.recent_dest_fort
+            fort_name = self.recent_dest_fortname
+        else:
+            nearest_fort = self.get_nearest_fort()
+            if nearest_fort is None:
+                return WorkerResult.SUCCESS
 
         lat = nearest_fort['latitude']
         lng = nearest_fort['longitude']
         fortID = nearest_fort['id']
-        details = fort_details(self.bot, fortID, lat, lng)
-        fort_name = details.get('name', 'Unknown')
+
+        self.bot.fort_position = lat,lng,0
+
+        if self.recent_dest_fort is None:
+            details = fort_details(self.bot, fortID, lat, lng)
+            fort_name = details.get('name', 'Unknown')
+            self.recent_dest_fortname = fort_name
+            self.recent_dest_fort = nearest_fort
 
         unit = self.bot.config.distance_unit  # Unit to use when printing formatted distance
 
@@ -64,13 +77,13 @@ class MoveToFort(BaseTask):
                 fort_event_data.update(lure_distance=format_dist(self.lure_distance, unit))
                 self.emit_event(
                     'moving_to_lured_fort',
-                    formatted="Moving towards pokestop {fort_name} - {distance} (attraction of lure {lure_distance})",
+                    formatted="Moving towards pokestop ({fort_name}) - {distance} (attraction of lure {lure_distance})",
                     data=fort_event_data
                 )
             else:
                 self.emit_event(
                     'moving_to_fort',
-                    formatted="Moving towards pokestop {fort_name} - {distance}",
+                    formatted="Moving towards pokestop ({fort_name}) - {distance}",
                     data=fort_event_data
                 )
 
@@ -87,7 +100,50 @@ class MoveToFort(BaseTask):
             'arrived_at_fort',
             formatted='Arrived at fort.'
         )
+        if self.recent_dest_fort:
+            self.recent_dest_fort = None
+            self.recent_dest_fortname = 'Unknown'
+
         return WorkerResult.SUCCESS
+
+    def _print_fort(self, fort, sequ):
+        lat = fort['latitude']
+        lng = fort['longitude']
+        fortID = fort['id']
+        dist = distance(
+            self.bot.start_position[0],
+            self.bot.start_position[1],
+            lat,
+            lng
+        )
+
+        format_str = '  -- {} Print fort '.format(sequ)
+        format_str = format_str + '{fort_name} - {distance}.'
+        self.emit_event(
+            'moving_to_fort',
+            formatted = format_str,
+            data = {
+                'fort_name': fortID,
+                'distance': format_dist(dist, self.bot.config.distance_unit),
+            }
+        )
+
+    def _print_forts(self, forts, sequ):
+        for fort in forts:
+            self._print_fort(fort, sequ)
+
+    def _remove_outzone_fort(self, forts):
+        if not self.bot_zone:
+            return None
+
+        # Remove out of range forts
+        forts = filter(lambda x: True if distance(
+                        self.bot.start_position[0],
+                        self.bot.start_position[1],
+                        x['latitude'],
+                        x['longitude']
+                       ) < self.zone_radius else False, forts)
+        return forts
 
     def _get_nearest_fort_on_lure_way(self, forts):
 
@@ -129,9 +185,37 @@ class MoveToFort(BaseTask):
         else:
             return None, 0
 
+    def _get_nearest_fort_on_start_pos_way(self):
+
+        forts = self.bot.get_forts(order_by_distance=True, distance_to_start_pos=True)
+        # Remove all forts which were spun in the last ticks to avoid circles if set
+        if self.bot.config.forts_avoid_circles:
+            forts = filter(lambda x: x["id"] not in self.bot.recent_forts, forts)
+
+        dist_sp_me = distance(self.bot.position[0], self.bot.position[1],
+                              self.bot.start_position[0],self.bot.start_position[1])
+
+        for fort in forts:
+            dist_sp_fort = distance(
+                fort['latitude'],
+                fort['longitude'],
+                self.bot.start_position[0],
+                self.bot.start_position[1])
+            dist_fort_me = distance(
+                fort['latitude'],
+                fort['longitude'],
+                self.bot.position[0],
+                self.bot.position[1])
+
+            if dist_sp_fort < dist_sp_me and dist_sp_me > dist_fort_me:
+                return fort
+
+        return forts[0]
+
+
     def get_nearest_fort(self):
         forts = self.bot.get_forts(order_by_distance=True)
-
+        forts = self._remove_outzone_fort(forts)
         # Remove stops that are still on timeout
         forts = filter(lambda x: x["id"] not in self.bot.fort_timeouts, forts)
 
@@ -149,4 +233,6 @@ class MoveToFort(BaseTask):
         if len(forts) > 0:
             return forts[0]
         else:
-            return None
+            # All forts are out of range of start pos, retrieve the nearest
+            # one to start position
+            return self._get_nearest_fort_on_start_pos_way()

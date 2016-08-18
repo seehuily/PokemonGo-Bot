@@ -29,30 +29,32 @@ class CatchVisiblePokemon(BaseTask):
                 key=
                 lambda x: distance(self.bot.position[0], self.bot.position[1], x['latitude'], x['longitude'])
             )
-            user_web_catchable = os.path.join(_base_dir, 'web', 'catchable-{}.json'.format(self.bot.config.username))
             for pokemon in self.bot.cell['catchable_pokemons']:
-                with open(user_web_catchable, 'w') as outfile:
-                    json.dump(pokemon, outfile)
+                #user_web_catchable = os.path.join(_base_dir, 'web', 'catchable-{}.json'.format(self.bot.config.username))
+                #with open(user_web_catchable, 'w') as outfile:
+                #json.dump(pokemon, outfile)
                 self.emit_event(
                     'catchable_pokemon',
-                    level='debug',
+					formatted='Something rustles nearby: {pokemon_id} SPID {spawn_point_id} {encounter_id}POS ({latitude}, {longitude}{expiration_timestamp_ms})',
                     data={
-                        'pokemon_id': pokemon['pokemon_id'],
+                        'pokemon_id': self.bot.pokemon_list[pokemon['pokemon_id'] - 1]['Name'],
                         'spawn_point_id': pokemon['spawn_point_id'],
-                        'encounter_id': pokemon['encounter_id'],
+                        'encounter_id': '',
                         'latitude': pokemon['latitude'],
                         'longitude': pokemon['longitude'],
-                        'expiration_timestamp_ms': pokemon['expiration_timestamp_ms'],
+                        'expiration_timestamp_ms': '',
                     }
                 )
 
-            self.catch_pokemon(self.bot.cell['catchable_pokemons'].pop(0))
-            if num_catchable_pokemon > 1:
-                return WorkerResult.RUNNING
-            else:
-                return WorkerResult.SUCCESS
+            while num_catchable_pokemon > 0:
+                num_catchable_pokemon -= 1
+                rv = self.catch_pokemon(self.bot.cell['catchable_pokemons'].pop(0))
+                if rv == WorkerResult.SUCCESS and num_catchable_pokemon > 0 :
+                    return WorkerResult.RUNNING
 
-        if num_available_pokemon > 0:
+            return WorkerResult.SUCCESS
+
+        if num_wild_pokemon > 0:
             # Sort all by distance from current pos- eventually this should
             # build graph & A* it
             self.bot.cell['wild_pokemons'].sort(
@@ -60,7 +62,7 @@ class CatchVisiblePokemon(BaseTask):
                 lambda x: distance(self.bot.position[0], self.bot.position[1], x['latitude'], x['longitude']))
             self.catch_pokemon(self.bot.cell['wild_pokemons'].pop(0))
 
-            if num_catchable_pokemon > 1:
+            if num_wild_pokemon > 1:
                 return WorkerResult.RUNNING
             else:
                 return WorkerResult.SUCCESS

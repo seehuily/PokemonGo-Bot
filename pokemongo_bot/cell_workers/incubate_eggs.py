@@ -1,6 +1,6 @@
 from pokemongo_bot.human_behaviour import sleep
 from pokemongo_bot.base_task import BaseTask
-
+from pokemongo_bot.inventory import Pokemon
 
 class IncubateEggs(BaseTask):
     SUPPORTED_TASK_API_VERSION = 1
@@ -209,3 +209,5 @@ class IncubateEggs(BaseTask):
                     'candy': candy[i],
                 }
             )
+
+            self.bot.add_to_new_pokemon_list(Pokemon(pokemon_data[i]))

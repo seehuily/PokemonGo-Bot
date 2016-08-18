@@ -9,7 +9,7 @@ from networkx.algorithms.clique import find_cliques
 import networkx as nx
 import numpy as np
 
-init()
+#init()
 
 TIME_PERIODS = (
     (60, 'minute'),

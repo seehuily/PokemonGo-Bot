@@ -15,6 +15,8 @@ class TransferPokemon(BaseTask):
         self.transfer_wait_max = self.config.get('transfer_wait_max', 4)
 
     def work(self):
+        npkm_msg = 'New pokemon list:\n'
+        has_new_pkm = False
         pokemon_groups = self._release_pokemon_get_groups()
         for pokemon_id, group in pokemon_groups.iteritems():
             pokemon_name = Pokemons.name_for(pokemon_id)
@@ -60,13 +62,61 @@ class TransferPokemon(BaseTask):
                                 'criteria': order_criteria
                             }
                         )
+                        for pokemon in best_pokemons:
+                            self.emit_event(
+                                'keep_best_detail',
+                                formatted="    > Best pokemons {pokemon}, [CP:{cp}, IV:{iv}] [{attack}/{defense}/{stamina}]",
+                                data={
+                                    'pokemon': pokemon_name,
+                                    'cp': pokemon.cp,
+                                    'iv': pokemon.iv,
+                                    'attack': pokemon.iv_attack,
+                                    'defense': pokemon.iv_defense,
+                                    'stamina': pokemon.iv_stamina,
+                                }
+                            )
+
                     for pokemon in transfer_pokemons:
                         self.release_pokemon(pokemon)
+                        self.bot.remove_from_new_pokemon_list(pokemon)
+
+                        # Display new pokemon list
+                        new_pokemon_groups = self.bot.get_new_pokemon()
+                        new_pokemon_groups.sort(key=lambda x: (x.pokemon_id))
+                        for npkm in new_pokemon_groups:
+                            new_pokemon_name = Pokemons.name_for(npkm.pokemon_id)
+                            self.emit_event(
+                                'new_pokemon_list',
+                                formatted="    - New caught pokemons {pokemon}, [CP:{cp}, IV:{iv}] [{attack}/{defense}/{stamina}]",
+                                data={
+                                    'pokemon': new_pokemon_name,
+                                    'cp': npkm.cp,
+                                    'iv': npkm.iv,
+                                    'attack': npkm.iv_attack,
+                                    'defense': npkm.iv_defense,
+                                    'stamina': npkm.iv_stamina,
+                                }
+                            )
+                            has_new_pkm = True
+                            npkm_msg = npkm_msg + 'New caught pokemons {}, [CP:{}, IV:{}] [{}/{}/{}]\n'.format(
+                                    new_pokemon_name, npkm.cp, npkm.iv, npkm.iv_attack, npkm.iv_defense, npkm.iv_stamina)
+
+
             else:
                 group = sorted(group, key=lambda x: x.cp, reverse=True)
                 for pokemon in group:
                     if self.should_release_pokemon(pokemon):
                         self.release_pokemon(pokemon)
+
+        if has_new_pkm:
+            npkm_file = os.path.join(
+                'C:\\Users\\Michael\\Google Drive', 'pkm', 'new-%s.txt' % self.bot.config.username
+            )
+            try:
+                with open(npkm_file, 'w') as outfile:
+                    outfile.write(npkm_msg)
+            except IOError as e:
+                self.bot.logger.info('[x] Error while opening location file: %s' % e)
 
     def _release_pokemon_get_groups(self):
         pokemon_groups = {}

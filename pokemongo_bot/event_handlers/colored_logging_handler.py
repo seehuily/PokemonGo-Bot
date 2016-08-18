@@ -21,6 +21,8 @@ class ColoredLoggingHandler(EventHandler):
         'item_discard_fail':                 'red',
         'item_discarded':                    'green',
         'keep_best_release':                 'green',
+        'keep_best_detail':                  'green',
+        'new_pokemon_list':                  'yellow',
         'level_up':                          'green',
         'level_up_reward':                   'green',
         'location_cache_error':              'yellow',
@@ -33,7 +35,7 @@ class ColoredLoggingHandler(EventHandler):
         'next_egg_incubates':                'yellow',
         'next_sleep':                        'green',
         'no_pokeballs':                      'red',
-        'pokemon_appeared':                  'yellow',
+        'pokemon_appeared':                  'white',
         'pokemon_capture_failed':            'red',
         'pokemon_caught':                    'blue',
         'pokemon_evolved':                   'green',
@@ -41,14 +43,14 @@ class ColoredLoggingHandler(EventHandler):
         'pokemon_inventory_full':            'red',
         'pokemon_nickname_invalid':          'red',
         'pokemon_not_in_range':              'yellow',
-        'pokemon_release':                   'green',
+        'pokemon_release':                   'white',
         'pokemon_vanished':                  'red',
         'pokestop_empty':                    'yellow',
         'pokestop_searching_too_often':      'yellow',
         'rename_pokemon':                    'green',
         'skip_evolve':                       'yellow',
         'softban':                           'red',
-        'spun_pokestop':                     'cyan',
+        'spun_pokestop':                     'white',
         'threw_berry_failed':                'red',
         'unknown_spin_result':               'red',
         'unset_pokemon_nickname':            'red',
@@ -112,7 +114,7 @@ class ColoredLoggingHandler(EventHandler):
         formatted_msg = '{}{}{}'.format(color, formatted_msg, self.COLOR_CODE['reset'])
 
         if formatted_msg:
-            message = "[{}] {}".format(event, formatted_msg)
+            message = "{}".format(formatted_msg)
         else:
             message = '{}: {}'.format(event, str(data))
         getattr(logger, level)(message)

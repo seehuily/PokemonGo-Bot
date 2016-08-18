@@ -75,9 +75,11 @@ class PokemonGoBot(Datastore):
         self.tick_count = 0
         self.softban = False
         self.start_position = None
+        self.fort_position = None
         self.last_map_object = None
         self.last_time_map_object = 0
         self.logger = logging.getLogger(type(self).__name__)
+        self.new_pokemon_list = []
 
         # Make our own copy of the workers for this instance
         self.workers = []
@@ -324,6 +326,13 @@ class PokemonGoBot(Datastore):
         self.event_manager.register_event('vip_pokemon')
         self.event_manager.register_event('gained_candy', parameters=('quantity', 'type'))
 
+        self.event_manager.register_event(
+            'new_pokemon_list',
+            parameters=(
+                'pokemon',
+                'cp', 'iv', 'attack', 'defense', 'stamina'
+            )
+        )
         # level up stuff
         self.event_manager.register_event(
             'level_up',
@@ -395,6 +404,13 @@ class PokemonGoBot(Datastore):
         self.event_manager.register_event('inventory_full')
 
         # release
+        self.event_manager.register_event(
+            'keep_best_detail',
+            parameters=(
+                'pokemon', 'cp', 'iv', 'attack', 'defense', 'stamina'
+            )
+        )
+
         self.event_manager.register_event(
             'keep_best_release',
             parameters=(
@@ -563,12 +579,19 @@ class PokemonGoBot(Datastore):
         user_web_location = os.path.join(
             _base_dir, 'web', 'location-%s.json' % self.config.username
         )
+
+        if self.fort_position is None:
+            self.fort_position = self.start_position
         # alt is unused atm but makes using *location easier
         try:
             with open(user_web_location, 'w') as outfile:
                 json.dump({
                     'lat': lat,
                     'lng': lng,
+                    'start_lat':self.start_position[0],
+                    'start_lng':self.start_position[1],
+                    'fort_lat':self.fort_position[0],
+                    'fort_lng':self.fort_position[1],
                     'alt': alt,
                     'cells': cells
                 }, outfile)
@@ -834,6 +857,28 @@ class PokemonGoBot(Datastore):
             self.latest_inventory = self.api.get_inventory()
         return self.latest_inventory
 
+    def get_new_pokemon(self):
+        return self.new_pokemon_list
+
+    def add_to_new_pokemon_list(self, pokemon):
+        self.new_pokemon_list.append(pokemon)
+
+    def remove_from_new_pokemon_list(self, pokemon):
+        for group_pokemon in self.new_pokemon_list:
+            if pokemon.pokemon_id != group_pokemon.pokemon_id:
+                continue
+            if pokemon.cp != group_pokemon.cp:
+                continue
+            if pokemon.iv_attack != group_pokemon.iv_attack:
+                continue
+            if pokemon.iv_defense != group_pokemon.iv_defense:
+                continue
+            if pokemon.iv_stamina != group_pokemon.iv_stamina:
+                continue
+
+            # Not a save delete, if we have two identical (pokemon_id, cp, A,D,S) entries, only one will be deleted.
+            self.new_pokemon_list.remove(group_pokemon)
+
     def update_inventory(self):
         # TODO: transition to using this inventory class everywhere
         init_inventory(self)
@@ -976,25 +1021,23 @@ class PokemonGoBot(Datastore):
                 )
 
                 # If location has been set in config, only use cache if starting position has not differed
-                if has_position and 'start_position' in location_json:
-                    last_start_position = tuple(location_json.get('start_position', []))
-
-                    # Start position has to have been set on a previous run to do this check
-                    if last_start_position and last_start_position != self.start_position:
-                        msg = 'Going to a new place, ignoring cached location.'
-                        self.event_manager.emit(
-                            'location_cache_ignored',
-                            sender=self,
-                            level='debug',
-                            formatted=msg
-                        )
-                        return
+                #if has_position and 'start_position' in location_json:
+                #    last_start_position = tuple(location_json.get('start_position', []))
+                #
+                #    # Start position has to have been set on a previous run to do this check
+                #    if last_start_position and last_start_position != self.start_position:
+                #        msg = 'Going to a new place, ignoring cached location.'
+                #        self.event_manager.emit(
+                #            'location_cache_ignored',
+                #            sender=self,
+                #            formatted=msg
+                #        )
+                #        return
 
                 self.api.set_position(*location)
                 self.event_manager.emit(
                     'position_update',
                     sender=self,
-                    level='debug',
                     formatted='Loaded location {current_position} from cache',
                     data={
                         'current_position': location,
@@ -1118,18 +1161,26 @@ class PokemonGoBot(Datastore):
 
         return enough_space
 
-    def get_forts(self, order_by_distance=False):
+    def get_forts(self, order_by_distance=False, distance_to_start_pos=False):
         forts = [fort
                  for fort in self.cell['forts']
                  if 'latitude' in fort and 'type' in fort]
 
         if order_by_distance:
-            forts.sort(key=lambda x: distance(
-                self.position[0],
-                self.position[1],
-                x['latitude'],
-                x['longitude']
-            ))
+            if distance_to_start_pos:
+                forts.sort(key=lambda x: distance(
+                    self.start_position[0],
+                    self.start_position[1],
+                    x['latitude'],
+                    x['longitude']
+                ))
+            else :
+                forts.sort(key=lambda x: distance(
+                    self.position[0],
+                    self.position[1],
+                    x['latitude'],
+                    x['longitude']
+                ))
 
         return forts
 
