@@ -65,7 +65,7 @@
       {
         "type": "EvolvePokemon",
         "config": {
-          "evolve_all": "none",
+          "evolve_all": "all",
           "first_evolve_by": "iv",
           "evolve_above_cp": 10,
           "evolve_above_iv": 0.93,
@@ -135,7 +135,7 @@
           "lure_attraction": true,
           "lure_max_distance": 2000,
           "bot_zone": true,
-          "zone_radius": 500
+          "zone_radius": 1200
         }
       },
       {
@@ -164,7 +164,13 @@
     "catch": {
       "any": {"catch_above_cp": 0, "catch_above_iv": 0, "logic": "or"},
       "// Example of always catching Rattata:": {},
-      "// Rattata": { "always_catch" : true }
+        "Rattata": { "never_catch" : true },
+        "Zubat": { "never_catch" : true },
+        "Pidgey": { "never_catch" : true },
+        "Weedle": { "never_catch" : true },
+        "Spearow": { "never_catch" : true },
+        "Paras": { "never_catch" : true },
+        "Caterpie": { "never_catch" : true }
     },
     "release": {
       "// Example of always releasing Rattata:": {},
