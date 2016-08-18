@@ -29,7 +29,7 @@ from pokemongo_bot.event_handlers import LoggingHandler, SocketIoHandler, Colore
 from pokemongo_bot.socketio_server.runner import SocketIoRunner
 from pokemongo_bot.websocket_remote_control import WebsocketRemoteControl
 from pokemongo_bot.base_dir import _base_dir
-from pokemongo_bot.datastore import DatabaseManager, Datastore
+from pokemongo_bot.datastore import _init_database, Datastore
 from worker_result import WorkerResult
 from tree_config_builder import ConfigException, MismatchTaskApiVersion, TreeConfigBuilder
 from inventory import init_inventory
@@ -56,8 +56,11 @@ class PokemonGoBot(Datastore):
         return self._player
 
     def __init__(self, config):
+
+        # Database connection MUST be setup before migrations will work
+        self.database = _init_database('/data/{}.db'.format(config.username))
+
         self.config = config
-        self.database = DatabaseManager(self)
         super(PokemonGoBot, self).__init__()
 
         self.fort_timeouts = dict()
@@ -174,6 +177,22 @@ class PokemonGoBot(Datastore):
                 'wake'
             )
         )
+        
+        # random pause
+        self.event_manager.register_event(
+            'next_random_pause',
+            parameters=(
+                'time',
+                'duration'
+            )
+        )
+        self.event_manager.register_event(
+            'bot_random_pause',
+            parameters=(
+                'time_hms',
+                'resume'
+            )
+        )
 
         # fort stuff
         self.event_manager.register_event(
@@ -280,6 +299,7 @@ class PokemonGoBot(Datastore):
         self.event_manager.register_event(
             'threw_pokeball',
             parameters=(
+                'throw_type',
                 'ball_name',
                 'success_percentage',
                 'count_left'
@@ -320,6 +340,7 @@ class PokemonGoBot(Datastore):
         self.event_manager.register_event('threw_berry_failed', parameters=('status_code',))
         self.event_manager.register_event('vip_pokemon')
         self.event_manager.register_event('gained_candy', parameters=('quantity', 'type'))
+        self.event_manager.register_event('catch_limit')
 
         # level up stuff
         self.event_manager.register_event(
@@ -686,7 +707,7 @@ class PokemonGoBot(Datastore):
             )
             time.sleep(10)
 
-        with self.database.backend.connection as conn:
+        with self.database as conn:
             conn.execute('''INSERT INTO login (timestamp, message) VALUES (?, ?)''', (time.time(), 'LOGIN_SUCCESS'))
 
         self.event_manager.emit(
