@@ -81,10 +81,26 @@ class MoveToFort(BaseTask):
             lng
         )
 
+        walk_speed = (self.bot.config.walk_max + self.bot.config.walk_min) / 2
+        walk_time = dist / walk_speed
+        rm_hur = int(walk_time / 3600)
+        rm_mnt = int(walk_time % 3600 / 60)
+        rm_sec = int(walk_time % 60)
+
+        dist_msg = format_dist(dist, unit)
+        time_msg = ')'
+        if (rm_sec > 0):
+            time_msg = '{}s'.format(rm_sec) + time_msg
+        if (rm_mnt > 0):
+            time_msg = '{}m'.format(rm_mnt) + time_msg
+        if (rm_hur > 0):
+            time_msg = '{}h'.format(rm_hur) + time_msg
+        dist_msg = dist_msg + ' (' + time_msg
+
         if dist > Constants.MAX_DISTANCE_FORT_IS_REACHABLE:
             fort_event_data = {
                 'fort_name': u"{}".format(fort_name),
-                'distance': format_dist(dist, unit),
+                'distance': dist_msg,
             }
 
             if self.is_attracted() > 0:
