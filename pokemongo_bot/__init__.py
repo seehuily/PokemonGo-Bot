@@ -555,6 +555,18 @@ class PokemonGoBot(Datastore):
                 "catchable_pokemons": catchable_pokemons
             }
 
+    def update_recent_forts(self):
+        # Cache recent forts
+        if self.recent_forts[-1] is not None and self.config.forts_cache_recent_forts:
+            cached_forts_path = os.path.join(
+                _base_dir, 'data', 'recent-forts-%s.json' % self.config.username
+            )
+            try:
+                with open(cached_forts_path, 'w') as outfile:
+                    json.dump(self.recent_forts, outfile)
+            except IOError as e:
+                self.logger.info('[x] Error while opening location file: %s' % e)
+
     def update_web_location(self, cells=[], lat=None, lng=None, alt=None):
         # we can call the function with no arguments and still get the position
         # and map_cells

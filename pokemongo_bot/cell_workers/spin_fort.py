@@ -89,6 +89,7 @@ class SpinFort(BaseTask):
                     'cooldown_complete_timestamp_ms')
                 self.bot.fort_timeouts.update({fort["id"]: pokestop_cooldown})
                 self.bot.recent_forts = self.bot.recent_forts[1:] + [fort['id']]
+                self.bot.update_recent_forts()
             elif spin_result == SPIN_REQUEST_RESULT_OUT_OF_RANGE:
                 self.emit_event(
                     'pokestop_out_of_range',
