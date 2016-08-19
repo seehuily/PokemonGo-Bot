@@ -36,6 +36,7 @@ class CatchVisiblePokemon(BaseTask):
                 self.emit_event(
                     'catchable_pokemon',
 					formatted='Something rustles nearby: {pokemon_id} SPID {spawn_point_id} {encounter_id}POS ({latitude}, {longitude}{expiration_timestamp_ms})',
+					level='debug',
                     data={
                         'pokemon_id': self.bot.pokemon_list[pokemon['pokemon_id'] - 1]['Name'],
                         'spawn_point_id': pokemon['spawn_point_id'],

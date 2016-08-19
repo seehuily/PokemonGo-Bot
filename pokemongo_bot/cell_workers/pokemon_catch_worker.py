@@ -45,10 +45,10 @@ class PokemonCatchWorker(Datastore, BaseTask):
         self.spawn_point_guid = ''
         self.response_key = ''
         self.response_status_key = ''
-        
+
         #Config
         self.min_ultraball_to_keep = self.config.get('min_ultraball_to_keep', 10)
-        
+
         self.catch_throw_parameters = self.config.get('catch_throw_parameters', {})
         self.catch_throw_parameters_spin_success_rate = self.catch_throw_parameters.get('spin_success_rate', 0.6)
         self.catch_throw_parameters_excellent_rate = self.catch_throw_parameters.get('excellent_rate', 0.1)
@@ -65,7 +65,7 @@ class PokemonCatchWorker(Datastore, BaseTask):
         self.catchsim_berry_wait_max = self.catchsim_config.get('berry_wait_max', 3)
         self.catchsim_changeball_wait_min = self.catchsim_config.get('changeball_wait_min', 2)
         self.catchsim_changeball_wait_max = self.catchsim_config.get('changeball_wait_max', 3)
-        
+
 
     ############################################################################
     # public methods
@@ -98,18 +98,43 @@ class PokemonCatchWorker(Datastore, BaseTask):
         pokemon_data = response['wild_pokemon']['pokemon_data'] if 'wild_pokemon' in response else response['pokemon_data']
         pokemon = Pokemon(pokemon_data)
 
+        ignore_pokemon = 0
+        ignore_reason_msg = ''
+
         # skip ignored pokemon
         if not self._should_catch_pokemon(pokemon):
+            ignore_pokemon = 1
+            ignore_reason_msg = ', but ignored by config'
+        else:
+            is_vip = self._is_vip_pokemon(pokemon)
+            if pokeballs < 1:
+                if superballs < 1:
+                    if ultraballs < 1:
+                        ignore_pokemon = 1
+                        ignore_reason_msg = ', but no PokeBall available'
+                    elif not is_vip:
+                        ignore_pokemon = 1
+                        ignore_reason_msg = ', only have UltraBall but not a VIP'
+
+        # log encounter
+        self.emit_event(
+            'pokemon_appeared',
+            formatted='A wild {pokemon} appeared! [CP {cp}] [IV {iv}] [A/D/S {iv_display}]'+ignore_reason_msg,
+            data={
+                'pokemon': pokemon.name,
+                'cp': pokemon.cp,
+                'iv': pokemon.iv,
+                'iv_display': pokemon.iv_display,
+                'encounter_id': self.pokemon['encounter_id'],
+                'latitude': self.pokemon['latitude'],
+                'longitude': self.pokemon['longitude'],
+                'pokemon_id': pokemon.pokemon_id
+            }
+        )
+
+        if ignore_pokemon == 1:
             return WorkerResult.IGNORE
 
-        is_vip = self._is_vip_pokemon(pokemon)
-        if pokeballs < 1:
-            if superballs < 1:
-                if ultraballs < 1:
-                    return WorkerResult.IGNORE
-                if not is_vip:
-                    return WorkerResult.IGNORE
-        
         user_web_catchable = os.path.join(_base_dir, 'web', 'catchable-{}.json'.format(self.bot.config.username))
         try:
             with open(user_web_catchable, 'w') as outfile:
@@ -123,22 +148,6 @@ class PokemonCatchWorker(Datastore, BaseTask):
                 json.dump({'pokemon_id': pokemon_id, 'longitude': cur_lng, 'latitude': cur_lat, 'spawn_point_id': spawn_point_id}, outfile)
         except IOError as e:
             errstr = '[x] Error while opening location file: catchable-.json'
-
-        # log encounter
-        self.emit_event(
-            'pokemon_appeared',
-            formatted='A wild {pokemon} appeared! [CP {cp}] [Potential {iv}] [A/D/S {iv_display}]',
-            data={
-                'pokemon': pokemon.name,
-                'cp': pokemon.cp,
-                'iv': pokemon.iv,
-                'iv_display': pokemon.iv_display,
-                'encounter_id': self.pokemon['encounter_id'],
-                'latitude': self.pokemon['latitude'],
-                'longitude': self.pokemon['longitude'],
-                'pokemon_id': pokemon.pokemon_id
-            }
-        )
 
         # simulate app
         sleep(3)
