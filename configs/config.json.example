@@ -14,7 +14,7 @@
       {
         "type": "SleepSchedule",
         "config": {
-          "enabled": true,
+          "enabled": false,
           "time": "22:54",
           "duration":"7:46",
           "time_random_offset": "00:24",
@@ -128,7 +128,7 @@
             "nice_rate": 0.3,
             "normal_rate": 0.1,
             "spin_success_rate" : 0.6,
-            "hit_rate": 0.75
+            "hit_rate": 0.85
           },
           "catch_simulation": {
             "flee_count": 3,
@@ -161,6 +161,7 @@
       {
         "type": "FollowSpiral",
         "config": {
+          "enabled": false,
           "diameter": 4,
           "step_size": 70
         }

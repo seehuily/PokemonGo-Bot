@@ -546,6 +546,7 @@ class PokemonGoBot(Datastore):
         self.check_session(self.position[0:2])
 
         for worker in self.workers:
+            #self.logger.info(worker)
             if worker.work() == WorkerResult.RUNNING:
                 return
 
