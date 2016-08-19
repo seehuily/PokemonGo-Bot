@@ -13,10 +13,13 @@ class CatchLuredPokemon(BaseTask):
 
     def work(self):
         lured_pokemon = self.get_lured_pokemon()
-        if len(lured_pokemon) > 0:
-            self.catch_pokemon(lured_pokemon[0])
 
-            if len(lured_pokemon) > 1:
+        num_catchable_pokemon = len(lured_pokemon)
+        i = 0
+        while i < num_catchable_pokemon:
+            rv = self.catch_pokemon(lured_pokemon[i])
+            i += 1
+            if rv == WorkerResult.SUCCESS and i < num_catchable_pokemon :
                 return WorkerResult.RUNNING
 
         return WorkerResult.SUCCESS
