@@ -54,6 +54,7 @@ class RecycleItems(BaseTask):
         self.max_revives_keep = self.config.get('max_revives_keep', None)
         self.recycle_wait_min = self.config.get('recycle_wait_min', 1)
         self.recycle_wait_max = self.config.get('recycle_wait_max', 4)
+        self.refresh_count = 0
         self._validate_item_filter()
 
     def _validate_item_filter(self):
@@ -87,6 +88,9 @@ class RecycleItems(BaseTask):
         :return: Returns whether or not the task went well
         :rtype: WorkerResult
         """
+        self.refresh_count += 1
+        if self.refresh_count % 5 == 0:
+            inventory.refresh_inventory()
 
         worker_result = WorkerResult.SUCCESS
         if self.should_run():
@@ -99,8 +103,6 @@ class RecycleItems(BaseTask):
                 worker_result = self.recycle_excess_category_max(self.max_berries_keep, [701,702,703,704,705])
             if not (self.max_revives_keep is None):
                 worker_result = self.recycle_excess_category_max(self.max_revives_keep, [201,202])
-
-            inventory.refresh_inventory()
 
             for item_in_inventory in inventory.items().all():
 

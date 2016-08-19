@@ -32,7 +32,7 @@ from pokemongo_bot.base_dir import _base_dir
 from pokemongo_bot.datastore import _init_database, Datastore
 from worker_result import WorkerResult
 from tree_config_builder import ConfigException, MismatchTaskApiVersion, TreeConfigBuilder
-from inventory import init_inventory
+from inventory import init_inventory, Pokemons
 from sys import platform as _platform
 import struct
 
@@ -94,6 +94,7 @@ class PokemonGoBot(Datastore):
         self.heartbeat_counter = 0
         self.last_heartbeat = time.time()
 
+        self.caught_log_file = os.path.join('C:\\Users\\Michael\\Google Drive', 'pkm', 'caught-%s.txt' % self.config.username)
 
     def start(self):
         self._setup_event_system()
@@ -184,7 +185,7 @@ class PokemonGoBot(Datastore):
                 'wake'
             )
         )
-        
+
         # random pause
         self.event_manager.register_event(
             'next_random_pause',
@@ -889,21 +890,36 @@ class PokemonGoBot(Datastore):
     def add_to_new_pokemon_list(self, pokemon):
         self.new_pokemon_list.append(pokemon)
 
+        npkm_msg = str(datetime.datetime.now()) + ' Capture ({}), [CP:{}, IV:{}] [{}/{}/{}]\n'.format(
+                Pokemons.name_for(pokemon.pokemon_id), pokemon.cp, pokemon.iv, pokemon.iv_attack, pokemon.iv_defense, pokemon.iv_stamina)
+        try:
+            with open(self.caught_log_file, 'a') as outfile:
+                outfile.write(npkm_msg)
+        except IOError as e:
+            self.logger.info('[x] Error while opening caught file: %s' % e)
+
     def remove_from_new_pokemon_list(self, pokemon):
-        for group_pokemon in self.new_pokemon_list:
-            if pokemon.pokemon_id != group_pokemon.pokemon_id:
+        for gpokemon in self.new_pokemon_list:
+            if pokemon.pokemon_id != gpokemon.pokemon_id:
                 continue
-            if pokemon.cp != group_pokemon.cp:
+            if pokemon.cp != gpokemon.cp:
                 continue
-            if pokemon.iv_attack != group_pokemon.iv_attack:
+            if pokemon.iv_attack != gpokemon.iv_attack:
                 continue
-            if pokemon.iv_defense != group_pokemon.iv_defense:
+            if pokemon.iv_defense != gpokemon.iv_defense:
                 continue
-            if pokemon.iv_stamina != group_pokemon.iv_stamina:
+            if pokemon.iv_stamina != gpokemon.iv_stamina:
                 continue
 
             # Not a save delete, if we have two identical (pokemon_id, cp, A,D,S) entries, only one will be deleted.
-            self.new_pokemon_list.remove(group_pokemon)
+            self.new_pokemon_list.remove(gpokemon)
+            npkm_msg = str(datetime.datetime.now()) + ' Release ({}), [CP:{}, IV:{}] [{}/{}/{}]\n'.format(
+                    Pokemons.name_for(gpokemon.pokemon_id), gpokemon.cp, gpokemon.iv, gpokemon.iv_attack, gpokemon.iv_defense, gpokemon.iv_stamina)
+            try:
+                with open(self.caught_log_file, 'a') as outfile:
+                    outfile.write(npkm_msg)
+            except IOError as e:
+                self.logger.info('[x] Error while opening caught file: %s' % e)
 
     def _print_list_pokemon(self):
         # get pokemon list
