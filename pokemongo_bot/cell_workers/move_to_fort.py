@@ -5,7 +5,7 @@ from random import random, uniform
 from math import asin, atan, cos, exp, log, pi, sin, sqrt, tan
 from pokemongo_bot import inventory
 from pokemongo_bot.constants import Constants
-from pokemongo_bot.step_walker import StepWalker
+from pokemongo_bot.walkers.step_walker import StepWalker
 from pokemongo_bot.worker_result import WorkerResult
 from pokemongo_bot.base_task import BaseTask
 from utils import distance, format_dist, fort_details

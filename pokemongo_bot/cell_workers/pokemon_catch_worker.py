@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 CATCH_STATUS_SUCCESS = 1
 CATCH_STATUS_FAILED = 2
 CATCH_STATUS_VANISHED = 3
+CATCH_STATUS_MISSED = 4
 
 ENCOUNTER_STATUS_SUCCESS = 1
 ENCOUNTER_STATUS_NOT_IN_RANGE = 5
@@ -60,6 +61,7 @@ class PokemonCatchWorker(Datastore, BaseTask):
         self.catch_throw_parameters_great_rate = self.catch_throw_parameters.get('great_rate', 0.5)
         self.catch_throw_parameters_nice_rate = self.catch_throw_parameters.get('nice_rate', 0.3)
         self.catch_throw_parameters_normal_rate = self.catch_throw_parameters.get('normal_rate', 0.1)
+        self.catch_throw_parameters_hit_rate = self.catch_throw_parameters.get('hit_rate', 0.8)
 
         self.catchsim_config = self.config.get('catch_simulation', {})
         self.catchsim_catch_wait_min = self.catchsim_config.get('catch_wait_min', 2)
@@ -151,7 +153,7 @@ class PokemonCatchWorker(Datastore, BaseTask):
             errstr = '[x] Error while opening location file: catchable-.json'
 
         # simulate app
-        sleep(3)
+        time.sleep(3)
 
         # check for VIP pokemon
         if is_vip:
@@ -422,12 +424,16 @@ class PokemonCatchWorker(Datastore, BaseTask):
                 }
             )
 
+            hit_pokemon = 1
+            if random() >= self.catch_throw_parameters_hit_rate:
+                hit_pokemon = 0
+
             response_dict = self.api.catch_pokemon(
                 encounter_id=encounter_id,
                 pokeball=current_ball,
                 normalized_reticle_size=throw_parameters['normalized_reticle_size'],
                 spawn_point_id=self.spawn_point_guid,
-                hit_pokemon=1,
+                hit_pokemon=hit_pokemon,
                 spin_modifier=throw_parameters['spin_modifier'],
                 normalized_hit_position=throw_parameters['normalized_hit_position']
             )
@@ -525,6 +531,17 @@ class PokemonCatchWorker(Datastore, BaseTask):
                 )
 
                 self.bot.softban = False
+
+            elif catch_pokemon_status == CATCH_STATUS_MISSED:
+                self.emit_event(
+                    'pokemon_capture_failed',
+                    formatted='Pokeball thrown to {pokemon} missed.. trying again!',
+                    data={'pokemon': pokemon.name}
+                )
+                # Take some time to throw the ball from config options
+                action_delay(self.catchsim_catch_wait_min, self.catchsim_catch_wait_max)
+                continue
+
             break
 
     def get_candy_gained_count(self, response_dict):

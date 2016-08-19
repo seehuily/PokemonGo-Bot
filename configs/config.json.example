@@ -61,17 +61,10 @@
       {
         "type": "UpdateLiveInventory",
         "config": {
-          "enabled": false,
+          "enabled": true,
           "min_interval": 120,
           "show_all_multiple_lines": false,
           "items": ["space_info", "pokeballs", "greatballs", "ultraballs", "razzberries", "luckyegg"]
-        }
-      },
-      {
-        "type": "TransferPokemon",
-        "config": {
-          "transfer_wait_min": 1,
-          "transfer_wait_max": 4
         }
       },
       {
@@ -91,6 +84,13 @@
           "logic": "and",
           "evolve_speed": 20,
           "use_lucky_egg": false
+        }
+      },
+      {
+        "type": "TransferPokemon",
+        "config": {
+          "transfer_wait_min": 1,
+          "transfer_wait_max": 4
         }
       },
       {
@@ -127,7 +127,8 @@
             "great_rate": 0.5,
             "nice_rate": 0.3,
             "normal_rate": 0.1,
-            "spin_success_rate" : 0.6
+            "spin_success_rate" : 0.6,
+            "hit_rate": 0.75
           },
           "catch_simulation": {
             "flee_count": 3,
@@ -194,17 +195,17 @@
     "catch": {
       "any": {"catch_above_cp": 0, "catch_above_iv": 0, "logic": "or"},
       "// Example of always catching Rattata:": {},
-        "Rattata": { "never_catch" : true },
-        "Zubat": { "never_catch" : true },
-        "Pidgey": { "never_catch" : true },
-        "Weedle": { "never_catch" : true },
-        "Spearow": { "never_catch" : true },
-        "Ekans": { "never_catch" : true },
-        "Paras": { "never_catch" : true },
-        "Psyduck": { "never_catch" : true },
-        "Tentacool": { "never_catch" : true },
-        "Venonat": { "never_catch" : true },
-        "Paras": { "never_catch" : true }
+      "Rattata": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Zubat": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Pidgey": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Weedle": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Spearow": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Ekans": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Paras": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Psyduck": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Tentacool": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Venonat": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Paras": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"}
     },
     "release": {
       "// Example of always releasing Rattata:": {},
