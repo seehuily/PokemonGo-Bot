@@ -46,19 +46,20 @@ class EvolvePokemon(BaseTask):
         if self.bot.tick_count is not 1 or not self.use_lucky_egg:
             return True
 
-        lucky_egg_count = self.bot.item_inventory_count(Item.ITEM_LUCKY_EGG.value)
+        lucky_egg = inventory.items().get(Item.ITEM_LUCKY_EGG.value)
 
         # Make sure the user has a lucky egg and skip if not
-        if lucky_egg_count > 0:
+        if lucky_egg.count > 0:
             response_dict_lucky_egg = self.bot.use_lucky_egg()
             if response_dict_lucky_egg:
                 result = response_dict_lucky_egg.get('responses', {}).get('USE_ITEM_XP_BOOST', {}).get('result', 0)
                 if result is 1:  # Request success
+                    lucky_egg.remove(1)
                     self.emit_event(
                         'used_lucky_egg',
                         formatted='Used lucky egg ({amount_left} left).',
                         data={
-                             'amount_left': lucky_egg_count - 1
+                             'amount_left': lucky_egg.count
                         }
                     )
                     return True
@@ -85,7 +86,7 @@ class EvolvePokemon(BaseTask):
         }
 
         for pokemon in inventory.pokemons().all():
-            if pokemon.id > 0 and pokemon.has_next_evolution() and (logic_to_function[self.cp_iv_logic](pokemon)):
+            if pokemon.unique_id > 0 and pokemon.has_next_evolution() and (logic_to_function[self.cp_iv_logic](pokemon)):
                 pokemons.append(pokemon)
 
         if self.first_evolve_by == "cp":
@@ -99,7 +100,7 @@ class EvolvePokemon(BaseTask):
         if pokemon.name in cache:
             return False
 
-        response_dict = self.api.evolve_pokemon(pokemon_id=pokemon.id)
+        response_dict = self.api.evolve_pokemon(pokemon_id=pokemon.unique_id)
         if response_dict.get('responses', {}).get('EVOLVE_POKEMON', {}).get('result', 0) == 1:
             self.emit_event(
                 'pokemon_evolved',
@@ -116,7 +117,7 @@ class EvolvePokemon(BaseTask):
             self.remove_from_new_pokemon_list(pokemon)
             awarded_candies = response_dict.get('responses', {}).get('EVOLVE_POKEMON', {}).get('candy_awarded', 0)
             inventory.candies().get(pokemon.pokemon_id).consume(pokemon.evolution_cost - awarded_candies)
-            inventory.pokemons().remove(pokemon.id)
+            inventory.pokemons().remove(pokemon.unique_id)
             pokemon = Pokemon(response_dict.get('responses', {}).get('EVOLVE_POKEMON', {}).get('evolved_pokemon_data', {}))
             inventory.pokemons().add(pokemon)
             self.add_to_new_pokemon_list(pokemon)

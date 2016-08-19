@@ -21,6 +21,16 @@
           "duration_random_offset": "00:43"
         }
       },
+	  {
+		"type": "RandomPause",
+        "config": {
+		  "enabled": false,
+		  "min_duration": "00:00:10",
+		  "max_duration": "00:10:00",
+		  "min_interval": "00:10:00",
+		  "max_interval": "02:00:00"
+        }
+	  },
       {
         "type": "CompleteTutorial",
         "config": {
@@ -46,6 +56,15 @@
           "stats": ["username", "level_stats", "uptime", "stardust_earned", "xp_earned", "xp_per_hour", "stops_visited"],
           "terminal_log": true,
           "terminal_title": true
+        }
+      },
+      {
+        "type": "UpdateLiveInventory",
+        "config": {
+          "enabled": false,
+          "min_interval": 120,
+          "show_all_multiple_lines": false,
+          "items": ["space_info", "pokeballs", "greatballs", "ultraballs", "razzberries", "luckyegg"]
         }
       },
       {
@@ -152,6 +171,16 @@
       "max_circle_size": 30,
       "cache_recent_forts": true
     },
+    "pokemon_bag": {
+      "// if 'show_at_start' is true, it will log all the pokemons in the bag (not eggs) at bot start": {},
+      "show_at_start": true,
+      "// if 'show_count' is true, it will show the amount of each pokemon (minimum 1)": {},
+      "show_count": false,
+      "// 'pokemon_info' parameter define which info to show for each pokemon": {},
+      "// the available options are": {},
+      "// ['cp', 'iv_ads', 'iv_pct', 'ivcp', 'ncp', 'level', 'hp', 'moveset', 'dps']": {},
+      "pokemon_info": ["cp", "iv_pct"]
+    },
     "walk_max": 4.16,
     "walk_min": 2.16,
     "debug": false,
@@ -161,6 +190,7 @@
     "distance_unit": "m",
     "reconnecting_timeout": 15,
     "logging_color": true,
+    "daily_catch_limit": 1000,
     "catch": {
       "any": {"catch_above_cp": 0, "catch_above_iv": 0, "logic": "or"},
       "// Example of always catching Rattata:": {},
@@ -169,15 +199,19 @@
         "Pidgey": { "never_catch" : true },
         "Weedle": { "never_catch" : true },
         "Spearow": { "never_catch" : true },
+        "Ekans": { "never_catch" : true },
         "Paras": { "never_catch" : true },
-        "Caterpie": { "never_catch" : true }
+        "Psyduck": { "never_catch" : true },
+        "Tentacool": { "never_catch" : true },
+        "Venonat": { "never_catch" : true },
+        "Paras": { "never_catch" : true }
     },
     "release": {
       "// Example of always releasing Rattata:": {},
       "// Rattata": {"always_release": true},
       "// Example of keeping 3 stronger (based on CP) Pidgey:": {},
       "// Pidgey": {"keep_best_cp": 3},
-      "// Example of keeping 2 stronger (based on IV) Zubat:": {},
+      "// Example of keeping 2 best (based on IV) Zubat:": {},
       "// Zubat": {"keep_best_iv": 2},
       "// Also, it is working with any": {},
       "// Legendary pokemons (Goes under S-Tier)": {},
