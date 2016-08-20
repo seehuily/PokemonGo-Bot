@@ -112,6 +112,7 @@ data/cells-*.json
 data/map-caught-*.json
 data/recent-forts-*.json
 data/caught-*.json
+data/deviceid-*.txt
 user_web_catchable
 
 # Multiple config

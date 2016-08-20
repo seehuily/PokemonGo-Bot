@@ -14,10 +14,15 @@ class TransferPokemon(Datastore, BaseTask):
     def __init__(self, bot, config):
         super(TransferPokemon, self).__init__(bot, config)
     def initialize(self):
+        self.min_free_slot = self.config.get('min_free_slot', 5)
         self.transfer_wait_min = self.config.get('transfer_wait_min', 1)
         self.transfer_wait_max = self.config.get('transfer_wait_max', 4)
 
     def work(self):
+
+        if not self._should_work():
+            return
+
         pokemon_groups = self._release_pokemon_get_groups()
         for pokemon_id, group in pokemon_groups.iteritems():
             pokemon_name = Pokemons.name_for(pokemon_id)
@@ -116,6 +121,9 @@ class TransferPokemon(Datastore, BaseTask):
                     if self.should_release_pokemon(pokemon):
                         self.release_pokemon(pokemon)
 
+    def _should_work(self):
+        return inventory.Pokemons.get_space_left() <= self.min_free_slot
+
     def _release_pokemon_get_groups(self):
         pokemon_groups = {}
         for pokemon in inventory.pokemons().all():
@@ -206,20 +214,19 @@ class TransferPokemon(Datastore, BaseTask):
         self.bot.metrics.released_pokemon()
         self.emit_event(
             'pokemon_release',
-            formatted='Exchanged {pokemon} [CP {cp}] [IV {iv}] for candy.',
+            formatted='Exchanged {pokemon} [IV {iv}] [CP {cp}] [{candy} candies]',
             data={
                 'pokemon': pokemon.name,
-                'cp': pokemon.cp,
                 'iv': pokemon.iv,
-                'ncp': pokemon.cp_percent,
-                'dps': pokemon.moveset.dps
+                'cp': pokemon.cp,
+                'candy': candy.quantity
             }
         )
         with self.bot.database as conn:
             c = conn.cursor()
             c.execute("SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name='transfer_log'")
 
-        result = c.fetchone()        
+        result = c.fetchone()
 
         while True:
             if result[0] == 1:

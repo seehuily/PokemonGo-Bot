@@ -5,7 +5,7 @@ from random import random, uniform
 from math import asin, atan, cos, exp, log, pi, sin, sqrt, tan
 from pokemongo_bot import inventory
 from pokemongo_bot.constants import Constants
-from pokemongo_bot.walkers.step_walker import StepWalker
+from pokemongo_bot.walkers.walker_factory import walker_factory
 from pokemongo_bot.worker_result import WorkerResult
 from pokemongo_bot.base_task import BaseTask
 from utils import distance, format_dist, fort_details
@@ -19,6 +19,7 @@ class MoveToFort(BaseTask):
         self.lure_attraction = self.config.get("lure_attraction", True)
         self.lure_max_distance = self.config.get("lure_max_distance", 2000)
         self.ignore_item_count = self.config.get("ignore_item_count", False)
+        self.walker = self.config.get('walker', 'StepWalker')
         self.bot_zone = self.config.get("bot_zone", False)
         self.zone_radius = self.config.get("zone_radius", 1000)
         self.recent_dest_fort = None
@@ -117,7 +118,7 @@ class MoveToFort(BaseTask):
                     data=fort_event_data
                 )
 
-            step_walker = StepWalker(
+            step_walker = walker_factory(self.walker,
                 self.bot,
                 lat,
                 lng

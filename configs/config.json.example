@@ -64,7 +64,7 @@
           "enabled": true,
           "min_interval": 120,
           "show_all_multiple_lines": false,
-          "items": ["space_info", "pokeballs", "greatballs", "ultraballs", "razzberries", "luckyegg"]
+          "items": ["pokemon_bag", "space_info", "pokeballs", "greatballs", "ultraballs", "razzberries", "luckyegg"]
         }
       },
       {
@@ -89,6 +89,7 @@
       {
         "type": "TransferPokemon",
         "config": {
+          "min_free_slot": 5,
           "transfer_wait_min": 1,
           "transfer_wait_max": 4
         }
@@ -156,6 +157,7 @@
         "config": {
           "lure_attraction": true,
           "lure_max_distance": 2000,
+          "walker": "StepWalker"
           "bot_zone": true,
           "zone_radius": 1200
         }
@@ -189,6 +191,11 @@
     "walk_min": 2.16,
     "alt_min": 500,
     "alt_max": 1000,
+    "gps_default_altitude": 8.0,
+    "replicate_gps_xy_noise": false,
+    "replicate_gps_z_noise": false,
+    "gps_xy_noise_range": 0.000125,
+    "gps_z_noise_range": 12.5,
     "debug": false,
     "test": false,
     "health_record": true,
@@ -201,14 +208,26 @@
       "any": {"catch_above_cp": 0, "catch_above_iv": 0, "logic": "or"},
       "// Example of always catching Rattata:": {},
       "Rattata": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Meowth": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Staryu": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Zubat": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Golbat": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Pidgey": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Pidgeotto": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Weedle": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Kakuna": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Spearow": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Ekans": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Paras": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Psyduck": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Golduck": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Tentacool": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Caterpie": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Metapod": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Poliwag": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Clefairy": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Squirtle": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Goldeen": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Venonat": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Psyduck": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Paras": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"}
