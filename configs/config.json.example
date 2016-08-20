@@ -157,7 +157,7 @@
         "config": {
           "lure_attraction": true,
           "lure_max_distance": 2000,
-          "walker": "StepWalker"
+          "walker": "StepWalker",
           "bot_zone": true,
           "zone_radius": 1200
         }
@@ -218,8 +218,6 @@
       "Kakuna": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Spearow": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Ekans": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Paras": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Psyduck": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Golduck": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Tentacool": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Caterpie": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
