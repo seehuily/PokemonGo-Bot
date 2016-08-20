@@ -130,6 +130,10 @@ configs/*
 bin/
 include/
 
+# pip install generated folders
+Scripts/
+tcl/
+
 # Pip check file
 pip-selfcheck.json
 
