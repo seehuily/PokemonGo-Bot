@@ -62,6 +62,7 @@ from pokemongo_bot.walkers.walker_factory import walker_factory
 from pokemongo_bot.worker_result import WorkerResult
 from pokemongo_bot.base_task import BaseTask
 from pokemongo_bot.cell_workers.pokemon_catch_worker import PokemonCatchWorker
+from random import uniform
 
 
 # Update the map if more than N meters away from the center. (AND'd with
@@ -99,6 +100,7 @@ class MoveToMapPokemon(BaseTask):
             self.caught = json.load(
                 open(data_file)
             )
+        self.alt = uniform(self.bot.config.alt_min, self.bot.config.alt_max)
 
     def get_pokemon_from_map(self):
         try:
@@ -226,7 +228,7 @@ class MoveToMapPokemon(BaseTask):
         api_encounter_response = catch_worker.create_encounter_api_call()
         time.sleep(SNIPE_SLEEP_SEC)
         self._teleport_back(last_position)
-        self.bot.api.set_position(last_position[0], last_position[1], 0)
+        self.bot.api.set_position(last_position[0], last_position[1], self.alt)
         time.sleep(SNIPE_SLEEP_SEC)
         self.bot.heartbeat()
         catch_worker.work(api_encounter_response)
@@ -273,6 +275,9 @@ class MoveToMapPokemon(BaseTask):
                     self.snipe(pokemon)
             else:
                 return self.snipe(pokemon)
+
+        if pokeballs_quantity + superballs_quantity + ultraballs_quantity < self.min_ball:
+            return WorkerResult.SUCCESS
 
         step_walker = self._move_to(pokemon)
         if not step_walker.step():
@@ -334,7 +339,7 @@ class MoveToMapPokemon(BaseTask):
             formatted='Teleporting to {poke_name}. ({poke_dist})',
             data=self._pokemon_event_data(pokemon)
         )
-        self.bot.api.set_position(pokemon['latitude'], pokemon['longitude'], 0)
+        self.bot.api.set_position(pokemon['latitude'], pokemon['longitude'], self.alt)
         self._encountered(pokemon)
 
     def _encountered(self, pokemon):
