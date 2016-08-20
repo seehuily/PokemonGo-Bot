@@ -891,8 +891,8 @@ class PokemonGoBot(Datastore):
     def add_to_new_pokemon_list(self, pokemon):
         self.new_pokemon_list.append(pokemon)
 
-        npkm_msg = str(datetime.datetime.now()) + ' Capture ({}), [CP:{}, IV:{}] [{}/{}/{}]\n'.format(
-                Pokemons.name_for(pokemon.pokemon_id), pokemon.cp, pokemon.iv, pokemon.iv_attack, pokemon.iv_defense, pokemon.iv_stamina)
+        npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M:%S") + ' IV:{} Capture ({}), CP:{} {}/{}/{}\n'.format(
+                pokemon.iv, Pokemons.name_for(pokemon.pokemon_id), pokemon.cp, pokemon.iv_attack, pokemon.iv_defense, pokemon.iv_stamina)
         try:
             with open(self.caught_log_file, 'a') as outfile:
                 outfile.write(npkm_msg)
@@ -914,8 +914,8 @@ class PokemonGoBot(Datastore):
 
             # Not a save delete, if we have two identical (pokemon_id, cp, A,D,S) entries, only one will be deleted.
             self.new_pokemon_list.remove(gpokemon)
-            npkm_msg = str(datetime.datetime.now()) + ' Release ({}), [CP:{}, IV:{}] [{}/{}/{}]\n'.format(
-                    Pokemons.name_for(gpokemon.pokemon_id), gpokemon.cp, gpokemon.iv, gpokemon.iv_attack, gpokemon.iv_defense, gpokemon.iv_stamina)
+            npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M:%S") + ' IV:{} Release ({}), CP:{} {}/{}/{}\n'.format(
+                    gpokemon.iv, Pokemons.name_for(gpokemon.pokemon_id), gpokemon.cp, gpokemon.iv_attack, gpokemon.iv_defense, gpokemon.iv_stamina)
             try:
                 with open(self.caught_log_file, 'a') as outfile:
                     outfile.write(npkm_msg)

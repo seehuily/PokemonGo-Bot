@@ -206,6 +206,7 @@
       "Psyduck": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Tentacool": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Venonat": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "Psyduck": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
       "Paras": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"}
     },
     "release": {

@@ -114,13 +114,13 @@ class EvolvePokemon(BaseTask):
                     'xp': '?'
                 }
             )
-            self.remove_from_new_pokemon_list(pokemon)
+            self.bot.remove_from_new_pokemon_list(pokemon)
             awarded_candies = response_dict.get('responses', {}).get('EVOLVE_POKEMON', {}).get('candy_awarded', 0)
             inventory.candies().get(pokemon.pokemon_id).consume(pokemon.evolution_cost - awarded_candies)
             inventory.pokemons().remove(pokemon.unique_id)
             pokemon = Pokemon(response_dict.get('responses', {}).get('EVOLVE_POKEMON', {}).get('evolved_pokemon_data', {}))
             inventory.pokemons().add(pokemon)
-            self.add_to_new_pokemon_list(pokemon)
+            self.bot.add_to_new_pokemon_list(pokemon)
             sleep(self.evolve_speed)
             return True
         else:
