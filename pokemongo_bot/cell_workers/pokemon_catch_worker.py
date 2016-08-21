@@ -500,8 +500,19 @@ class PokemonCatchWorker(Datastore, BaseTask):
                         'pokemon_id': pokemon.pokemon_id
                     }
                 )
-                if self._pct(catch_rate_by_ball[current_ball]) == 100:
+
+                self.bot.softban_vanish_count += 1
+
+                current_catch_pct = self._pct(catch_rate_by_ball[current_ball])
+                if current_catch_pct == 100 or (self.bot.softban_vanish_count >= 20):
+                    format_msg = 'You may be softbanned because vanished but catch rate {} >= 100 or continuously vanished count {} >= 20'
+                    format_msg = format_msg.format(current_catch_pct, self.bot.softban_vanish_count)
                     self.bot.softban = True
+                    self.emit_event(
+                        'softban',
+                        level='warning',
+                        formatted=format_msg
+                    )
 
             # pokemon caught!
             elif catch_pokemon_status == CATCH_STATUS_SUCCESS:
@@ -575,6 +586,7 @@ class PokemonCatchWorker(Datastore, BaseTask):
                 )
 
                 self.bot.softban = False
+                self.bot.softban_vanish_count = 0
 
             elif catch_pokemon_status == CATCH_STATUS_MISSED:
                 self.emit_event(

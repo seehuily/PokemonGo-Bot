@@ -166,7 +166,7 @@ class MoveToFort(BaseTask):
 
     def _remove_outzone_fort(self, forts):
         if not self.bot_zone:
-            return None
+            return forts
 
         # Remove out of range forts
         forts = filter(lambda x: True if distance(

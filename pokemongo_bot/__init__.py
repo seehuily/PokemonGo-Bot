@@ -74,6 +74,7 @@ class PokemonGoBot(Datastore):
         self.recent_forts = [None] * config.forts_max_circle_size
         self.tick_count = 0
         self.softban = False
+        self.softban_vanish_count = 0
         self.start_position = None
         self.fort_position = None
         self.last_map_object = None
@@ -537,7 +538,7 @@ class PokemonGoBot(Datastore):
         self.event_manager.register_event('transfer_log')
         self.event_manager.register_event('pokestop_log')
         self.event_manager.register_event('softban_log')
-        
+
     def tick(self):
         self.health_record.heartbeat()
         self.cell = self.get_meta_cell()
@@ -764,7 +765,7 @@ class PokemonGoBot(Datastore):
             c = conn.cursor()
             c.execute("SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name='login'")
 
-        result = c.fetchone()        
+        result = c.fetchone()
 
         while True:
             if result[0] == 1:
