@@ -81,6 +81,14 @@ class MoveToFort(BaseTask):
             lat,
             lng
         )
+        noised_dist = distance(
+            self.bot.noised_position[0],
+            self.bot.noised_position[1],
+            lat,
+            lng
+        )
+
+        moving = noised_dist > Constants.MAX_DISTANCE_FORT_IS_REACHABLE if self.bot.config.replicate_gps_xy_noise else dist > Constants.MAX_DISTANCE_FORT_IS_REACHABLE
 
         walk_speed = (self.bot.config.walk_max + self.bot.config.walk_min) / 2
         walk_time = dist / walk_speed
@@ -98,7 +106,7 @@ class MoveToFort(BaseTask):
             time_msg = '{}h'.format(rm_hur) + time_msg
         dist_msg = dist_msg + ' (' + time_msg
 
-        if dist > Constants.MAX_DISTANCE_FORT_IS_REACHABLE:
+        if moving:
             fort_event_data = {
                 'fort_name': u"{}".format(fort_name),
                 'distance': dist_msg,

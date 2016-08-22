@@ -18,19 +18,20 @@
           "time": "22:54",
           "duration":"7:46",
           "time_random_offset": "00:24",
-          "duration_random_offset": "00:43"
+          "duration_random_offset": "00:43",
+          "wake_up_at_location": ""
         }
       },
-	  {
-		"type": "RandomPause",
+      {
+        "type": "RandomPause",
         "config": {
-		  "enabled": false,
-		  "min_duration": "00:00:10",
-		  "max_duration": "00:10:00",
-		  "min_interval": "00:10:00",
-		  "max_interval": "02:00:00"
+          "enabled": false,
+          "min_duration": "00:00:10",
+          "max_duration": "00:10:00",
+          "min_interval": "00:10:00",
+          "max_interval": "02:00:00"
         }
-	  },
+      },
       {
         "type": "CompleteTutorial",
         "config": {
@@ -45,7 +46,8 @@
       {
         "type": "IncubateEggs",
         "config": {
-          "longer_eggs_first": true
+          "longer_eggs_first": true,
+          "min_interval": 120
         }
       },
       {
@@ -68,9 +70,18 @@
         }
       },
       {
+        "type": "TransferPokemon",
+        "config": {
+          "min_free_slot": 50,
+          "transfer_wait_min": 1,
+          "transfer_wait_max": 4
+        }
+      },
+      {
         "type": "NicknamePokemon",
         "config": {
           "enabled": true,
+          "nickname_above_iv": 0.8,
           "nickname_template": "{iv_pct}_{iv_ads}"
         }
       },
@@ -84,14 +95,6 @@
           "logic": "and",
           "evolve_speed": 20,
           "use_lucky_egg": false
-        }
-      },
-      {
-        "type": "TransferPokemon",
-        "config": {
-          "min_free_slot": 50,
-          "transfer_wait_min": 1,
-          "transfer_wait_max": 4
         }
       },
       {
@@ -174,7 +177,7 @@
     "map_object_cache_time": 5,
     "forts": {
       "avoid_circles": true,
-      "max_circle_size": 30,
+      "max_circle_size": 50,
       "cache_recent_forts": true
     },
     "pokemon_bag": {
@@ -182,6 +185,8 @@
       "show_at_start": true,
       "// if 'show_count' is true, it will show the amount of each pokemon (minimum 1)": {},
       "show_count": false,
+      "// if 'show_candies' is true, it will show the amount of candies for each pokemon": {},
+      "show_candies": false,
       "// 'pokemon_info' parameter define which info to show for each pokemon": {},
       "// the available options are": {},
       "// ['cp', 'iv_ads', 'iv_pct', 'ivcp', 'ncp', 'level', 'hp', 'moveset', 'dps']": {},
@@ -189,9 +194,9 @@
     },
     "walk_max": 4.16,
     "walk_min": 2.16,
-    "alt_min": 0,
-    "alt_max": 285,
-    "gps_default_altitude": 1.0,
+    "alt_min": 500,
+    "alt_max": 1000,
+    "gps_default_altitude": 8.0,
     "replicate_gps_xy_noise": false,
     "replicate_gps_z_noise": false,
     "gps_xy_noise_range": 0.000125,

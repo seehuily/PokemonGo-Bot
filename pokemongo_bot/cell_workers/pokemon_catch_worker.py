@@ -121,7 +121,7 @@ class PokemonCatchWorker(Datastore, BaseTask):
                     if inventory.items().get(ITEM_ULTRABALL).count < 1:
                         ignore_pokemon = 1
                         ignore_reason_msg = ', but no PokeBall available'
-                    elif not is_vip:
+                    elif (not is_vip) and inventory.items().get(ITEM_ULTRABALL).count <= self.min_ultraball_to_keep:
                         ignore_pokemon = 1
                         ignore_reason_msg = ', only have UltraBall but not a VIP'
 
@@ -372,6 +372,7 @@ class PokemonCatchWorker(Datastore, BaseTask):
             if self.min_ultraball_to_keep >= 0 and self.min_ultraball_to_keep < min_ultraball_to_keep:
                 min_ultraball_to_keep = self.min_ultraball_to_keep
 
+        used_berry = False
         while True:
 
             # find lowest available ball
@@ -399,9 +400,8 @@ class PokemonCatchWorker(Datastore, BaseTask):
             berries_to_spare = berry_count > 0 if is_vip else berry_count > num_next_balls + 30
 
             # use a berry if we are under our ideal rate and have berries to spare
-            used_berry = False
             changed_ball = False
-            if catch_rate_by_ball[current_ball] < ideal_catch_rate_before_throw and berries_to_spare:
+            if catch_rate_by_ball[current_ball] < ideal_catch_rate_before_throw and berries_to_spare and not used_berry:
                 new_catch_rate_by_ball = self._use_berry(berry_id, berry_count, encounter_id, catch_rate_by_ball, current_ball)
                 if new_catch_rate_by_ball != catch_rate_by_ball:
                     catch_rate_by_ball = new_catch_rate_by_ball
@@ -483,6 +483,7 @@ class PokemonCatchWorker(Datastore, BaseTask):
                     formatted='{pokemon} capture failed.. trying again!',
                     data={'pokemon': pokemon.name}
                 )
+                used_berry = False
 
                 # sleep according to flee_count and flee_duration config settings
                 # randomly chooses a number of times to 'show' wobble animation between 1 and flee_count
