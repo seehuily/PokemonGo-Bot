@@ -83,6 +83,7 @@ class PokemonGoBot(Datastore):
         self.alt = 1
         self.alt = self.config.gps_default_altitude
         self.new_pokemon_list = []
+        self.ignore_eid_list = []
 
         # Make our own copy of the workers for this instance
         self.workers = []
@@ -912,14 +913,20 @@ class PokemonGoBot(Datastore):
 
         self.logger.info('')
 
+    def ignore_list_insert(self, eid):
+        self.ignore_eid_list.append(eid)
+
+    def ignore_list_get(self):
+        return self.ignore_eid_list
+
     def get_new_pokemon(self):
         return self.new_pokemon_list
 
     def add_to_new_pokemon_list(self, pokemon):
         self.new_pokemon_list.append(pokemon)
 
-        npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M:%S") + ' IV:{} Capture ({}), CP:{} {}/{}/{}\n'.format(
-                pokemon.iv, Pokemons.name_for(pokemon.pokemon_id), pokemon.cp, pokemon.iv_attack, pokemon.iv_defense, pokemon.iv_stamina)
+        npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M:%S") + ' IV:{:0<4} {:0>2}/{:0>2}/{:0>2} Capture ({}), CP:{}\n'.format(
+                pokemon.iv, pokemon.iv_attack, pokemon.iv_defense, pokemon.iv_stamina, Pokemons.name_for(pokemon.pokemon_id), pokemon.cp)
         try:
             with open(self.caught_log_file, 'a') as outfile:
                 outfile.write(npkm_msg)
@@ -941,8 +948,8 @@ class PokemonGoBot(Datastore):
 
             # Not a save delete, if we have two identical (pokemon_id, cp, A,D,S) entries, only one will be deleted.
             self.new_pokemon_list.remove(gpokemon)
-            npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M:%S") + ' IV:{} Release ({}), CP:{} {}/{}/{}\n'.format(
-                    gpokemon.iv, Pokemons.name_for(gpokemon.pokemon_id), gpokemon.cp, gpokemon.iv_attack, gpokemon.iv_defense, gpokemon.iv_stamina)
+            npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M:%S") + ' IV:{:0<4} {:0>2}/{:0>2}/{:0>2} Release ({}), CP:{}\n'.format(
+                    gpokemon.iv, gpokemon.iv_attack, gpokemon.iv_defense, gpokemon.iv_stamina, Pokemons.name_for(gpokemon.pokemon_id), gpokemon.cp)
             try:
                 with open(self.caught_log_file, 'a') as outfile:
                     outfile.write(npkm_msg)

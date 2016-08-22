@@ -106,11 +106,13 @@ class PokemonCatchWorker(Datastore, BaseTask):
         pokemon = Pokemon(pokemon_data)
 
         ignore_pokemon = 0
+        ignore_by_config = 0
         ignore_reason_msg = ''
 
         # skip ignored pokemon
         if not self._should_catch_pokemon(pokemon):
             ignore_pokemon = 1
+            ignore_by_config = 1
             ignore_reason_msg = ', but ignored by config'
         else:
             is_vip = self._is_vip_pokemon(pokemon)
@@ -124,21 +126,24 @@ class PokemonCatchWorker(Datastore, BaseTask):
                         ignore_reason_msg = ', only have UltraBall but not a VIP'
 
         # log encounter
-        self.emit_event(
-            'pokemon_appeared',
-            formatted='A wild {pokemon} appeared! [CP {cp}] [NCP {ncp}] [IV {iv}] [A/D/S {iv_display}]'+ignore_reason_msg,
-            data={
-                'pokemon': pokemon.name,
-                'ncp': round(pokemon.cp_percent, 2),
-                'cp': pokemon.cp,
-                'iv': pokemon.iv,
-                'iv_display': pokemon.iv_display,
-                'encounter_id': self.pokemon['encounter_id'],
-                'latitude': self.pokemon['latitude'],
-                'longitude': self.pokemon['longitude'],
-                'pokemon_id': pokemon.pokemon_id
-            }
-        )
+        if self.pokemon['encounter_id'] not in self.bot.ignore_list_get():
+            self.emit_event(
+                'pokemon_appeared',
+                formatted='A wild {pokemon} appeared! [CP {cp}] [LVL {ncp}] [IV {iv}] [A/D/S {iv_display}]'+ignore_reason_msg,
+                data={
+                    'pokemon': pokemon.name,
+                    'ncp': pokemon.level,
+                    'cp': pokemon.cp,
+                    'iv': pokemon.iv,
+                    'iv_display': pokemon.iv_display,
+                    'encounter_id': self.pokemon['encounter_id'],
+                    'latitude': self.pokemon['latitude'],
+                    'longitude': self.pokemon['longitude'],
+                    'pokemon_id': pokemon.pokemon_id
+                }
+            )
+            if ignore_by_config == 1:
+                self.bot.ignore_list_insert(self.pokemon['encounter_id'])
 
         if ignore_pokemon == 1:
             return WorkerResult.IGNORE
@@ -526,10 +531,10 @@ class PokemonCatchWorker(Datastore, BaseTask):
                     inventory.pokemons().add(pokemon)
                     self.emit_event(
                         'pokemon_caught',
-                        formatted='Captured {pokemon}! [CP {cp}] [NCP {ncp}] [Potential {iv}] [{iv_display}] [+{exp} exp]',
+                        formatted='Captured {pokemon}! [CP {cp}] [LVL {ncp}] [Potential {iv}] [{iv_display}] [+{exp} exp]',
                         data={
                             'pokemon': pokemon.name,
-                            'ncp': round(pokemon.cp_percent, 2),
+                            'ncp': pokemon.level,
                             'cp': pokemon.cp,
                             'iv': pokemon.iv,
                             'iv_display': pokemon.iv_display,
