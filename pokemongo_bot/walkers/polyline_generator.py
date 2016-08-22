@@ -56,7 +56,7 @@ class Polyline(object):
         self.DIRECTIONS_URL = '{}&origin={}&destination={}'.format(self.DIRECTIONS_API_URL,
                 '{},{}'.format(*self.origin),
                 '{},{}'.format(*self.destination))
-        
+
         self.directions_response = requests.get(self.DIRECTIONS_URL).json()
         try:
         # Polyline walker starts teleporting after reaching api query limit.
@@ -75,8 +75,11 @@ class Polyline(object):
         self.ELEVATION_API_URL='https://maps.googleapis.com/maps/api/elevation/json?path=enc:'
         self.ELEVATION_URL = '{}{}&samples={}'.format(self.ELEVATION_API_URL,
                                                       self.polyline, self.elevation_samples)
-        self.elevation_response = requests.get(self.ELEVATION_URL).json()
-        self.polyline_elevations = [x['elevation'] for x in self.elevation_response['results']]
+        try:
+            self.elevation_response = requests.get(self.ELEVATION_URL).json()
+            self.polyline_elevations = [x['elevation'] for x in self.elevation_response['results']]
+        except Exception as e:
+            self.polyline_elevations = [0]
         self._timestamp = time.time()
         self.is_paused = False
         self._last_paused_timestamp = None
