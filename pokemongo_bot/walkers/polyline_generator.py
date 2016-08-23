@@ -5,6 +5,7 @@ from math import ceil
 import haversine
 import polyline
 import requests
+import logging
 
 class PolylineObjectHandler:
     '''
@@ -16,7 +17,7 @@ class PolylineObjectHandler:
     _run = False
 
     @staticmethod
-    def cached_polyline(origin, destination, speed):
+    def cached_polyline(bot, origin, destination, speed):
         '''
         Google API has limits, so we can't generate new Polyline at every tick...
         '''
@@ -39,7 +40,7 @@ class PolylineObjectHandler:
                 PolylineObjectHandler._run = True
                 PolylineObjectHandler._instability = 20 # next N moves use same cache
 
-            PolylineObjectHandler._cache = Polyline(origin, destination, speed)
+            PolylineObjectHandler._cache = Polyline(bot, origin, destination, speed)
         else:
             # valid cache found
             PolylineObjectHandler._instability -= 1
@@ -49,8 +50,8 @@ class PolylineObjectHandler:
 
 
 class Polyline(object):
-    def __init__(self, origin, destination, speed):
-        self.DIRECTIONS_API_URL='https://maps.googleapis.com/maps/api/directions/json?mode=walking'
+    def __init__(self, bot, origin, destination, speed):
+        self.DIRECTIONS_API_URL='https://maps.googleapis.com/maps/api/directions/json?mode=walking&key={}'.format(bot.config.gmapkey)
         self.origin = origin
         self.destination = tuple(destination)
         self.DIRECTIONS_URL = '{}&origin={}&destination={}'.format(self.DIRECTIONS_API_URL,

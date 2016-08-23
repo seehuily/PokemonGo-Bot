@@ -128,6 +128,7 @@ class EvolvePokemon(Datastore, BaseTask):
             inventory.pokemons().remove(pokemon.unique_id)
             new_pokemon = inventory.Pokemon(evolution)
             inventory.pokemons().add(new_pokemon)
+            self.bot.add_to_new_pokemon_list(new_pokemon)
 
             sleep(self.evolve_speed)
             evolve_result = True

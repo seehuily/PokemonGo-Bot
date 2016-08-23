@@ -15,7 +15,7 @@ class PolylineWalker(StepWalker):
 
     def __init__(self, bot, dest_lat, dest_lng):
         super(PolylineWalker, self).__init__(bot, dest_lat, dest_lng)
-        self.polyline_walker = PolylineObjectHandler.cached_polyline(tuple(self.api.get_position()[:2]),
+        self.polyline_walker = PolylineObjectHandler.cached_polyline(bot, tuple(self.api.get_position()[:2]),
                                         (self.destLat, self.destLng), self.speed)
 
         self.dist = distance(
