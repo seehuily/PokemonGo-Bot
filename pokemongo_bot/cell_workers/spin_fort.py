@@ -45,6 +45,9 @@ class SpinFort(Datastore, BaseTask):
         forts = self.get_forts_in_range()
 
         if not self.should_run() or len(forts) == 0:
+            if len(forts) > 0:
+                self.bot.recent_forts = self.bot.recent_forts[1:] + [forts[0]['id']]
+                self.bot.update_recent_forts()
             return WorkerResult.SUCCESS
 
         fort = forts[0]
@@ -91,7 +94,7 @@ class SpinFort(Datastore, BaseTask):
                 with self.bot.database as conn:
                     c = conn.cursor()
                     c.execute("SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name='pokestop_log'")
-                result = c.fetchone()        
+                result = c.fetchone()
                 while True:
                     if result[0] == 1:
                         conn.execute('''INSERT INTO pokestop_log (pokestop, exp, items) VALUES (?, ?, ?)''', (fort_name, str(experience_awarded), str(items_awarded)))
@@ -154,7 +157,7 @@ class SpinFort(Datastore, BaseTask):
                 with self.bot.database as conn:
                     c = conn.cursor()
                     c.execute("SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name='softban_log'")
-                result = c.fetchone()        
+                result = c.fetchone()
 
                 while True:
                     if result[0] == 1:

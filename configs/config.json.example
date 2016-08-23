@@ -2,7 +2,7 @@
     "auth_service": "ptc",
     "username": "YOUR_USERNAME",
     "password": "YOUR_PASSWORD",
-    "location": "37.805724, -122.416611",
+    "location": "40.780101, -73.969102",
     "gmapkey": "GOOGLE_MAPS_API_KEY",
     "encrypt_location": "",
     "websocket_server": false,
@@ -54,7 +54,7 @@
         "type": "UpdateLiveStats",
         "config": {
           "enabled": true,
-          "min_interval": 30,
+          "min_interval": 300,
           "stats": ["username", "level_stats", "uptime", "stardust_earned", "xp_earned", "xp_per_hour", "stops_visited"],
           "terminal_log": true,
           "terminal_title": true
@@ -64,7 +64,7 @@
         "type": "UpdateLiveInventory",
         "config": {
           "enabled": true,
-          "min_interval": 120,
+          "min_interval": 300,
           "show_all_multiple_lines": false,
           "items": ["pokemon_bag", "space_info", "pokeballs", "greatballs", "ultraballs", "razzberries", "luckyegg"]
         }
@@ -100,7 +100,7 @@
       {
         "type": "RecycleItems",
         "config": {
-          "min_empty_space": 15,
+          "min_empty_space": -1,
           "max_balls_keep": 150,
           "max_potions_keep": 50,
           "max_berries_keep": 70,
@@ -130,9 +130,9 @@
           "vip_berry_threshold": 0.9,
           "catch_throw_parameters": {
             "excellent_rate": 0.1,
-            "great_rate": 0.5,
+            "great_rate": 0.2,
             "nice_rate": 0.3,
-            "normal_rate": 0.1,
+            "normal_rate": 0.4,
             "spin_success_rate" : 0.6,
             "hit_rate": 0.85
           },
@@ -160,9 +160,10 @@
         "config": {
           "lure_attraction": true,
           "lure_max_distance": 2000,
+          "ignore_item_count": true,
           "walker": "PolylineWalker",
           "bot_zone": true,
-          "zone_radius": 800
+          "zone_radius": 600
         }
       },
       {
@@ -192,10 +193,10 @@
       "// ['cp', 'iv_ads', 'iv_pct', 'ivcp', 'ncp', 'level', 'hp', 'moveset', 'dps']": {},
       "pokemon_info": ["cp", "ncp", "iv_pct"]
     },
-    "walk_max": 4.16,
-    "walk_min": 2.16,
-    "alt_min": 500,
-    "alt_max": 1000,
+    "walk_max": 10.16,
+    "walk_min": 6.16,
+    "alt_min": 8,
+    "alt_max": 8,
     "gps_default_altitude": 8.0,
     "replicate_gps_xy_noise": false,
     "replicate_gps_z_noise": false,
@@ -208,32 +209,39 @@
     "distance_unit": "m",
     "reconnecting_timeout": 15,
     "logging_color": true,
-    "daily_catch_limit": 2000,
+    "daily_catch_limit": 600,
     "catch": {
-      "any": {"catch_above_cp": 0, "catch_above_iv": 0, "logic": "or"},
+      "any": {"catch_above_cp": 10, "catch_above_iv": 0.85, "catch_above_ncp": 0, "logic": "and"},
       "// Example of always catching Rattata:": {},
-      "Rattata": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Meowth": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Staryu": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Zubat": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Golbat": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Pidgey": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Pidgeotto": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Weedle": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Kakuna": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Spearow": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Ekans": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Golduck": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Tentacool": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Caterpie": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Metapod": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Poliwag": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Clefairy": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Squirtle": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Goldeen": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Venonat": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Psyduck": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
-      "Paras": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"}
+      "// Rattata": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Raticate": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Zubat": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Golbat": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Clefairy": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "// Clefable": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "// Spearow": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Pidgey": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Nidoran M": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Nidorino": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Nidoran F": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Nidorina": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Weedle": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Kakuna": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Fearow": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Horsea": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Ekans": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "// Pidgeotto": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Psyduck": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "// Golduck": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "// Goldeen": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Caterpie": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Metapod": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Tentacool": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Tentacruel": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Venonat": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"},
+      "// Krabby": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Squirtle": {"catch_above_cp": 10, "catch_above_iv": 0.91, "logic": "and"},
+      "// Paras": {"catch_above_cp": 10, "catch_above_iv": 0.93, "logic": "and"}
     },
     "release": {
       "// Example of always releasing Rattata:": {},
@@ -433,6 +441,14 @@
         "Exeggutor": {},
         "Muk": {},
         "Weezing": {},
+        "Dratini": {},
+        "Magikarp": {},
+        "Growlithe": {},
+        "Exeggcute": {},
+        "Grimer": {},
+        "Koffing": {},
+        "Jolteon": {},
+        "Eevee": {},
         "Flareon": {}
     }
 }
