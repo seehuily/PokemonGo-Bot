@@ -31,14 +31,19 @@ class SpinFort(Datastore, BaseTask):
         self.ignore_item_count = self.config.get("ignore_item_count", False)
         self.spin_wait_min = self.config.get("spin_wait_min", 2)
         self.spin_wait_max = self.config.get("spin_wait_max", 3)
+        self.items_full_warning = 0
 
     def should_run(self):
         has_space_for_loot = inventory.Items.has_space_for_loot()
         if not has_space_for_loot and not self.ignore_item_count:
-            self.emit_event(
-                'inventory_full',
-                formatted="Inventory is full. You might want to change your config to recycle more items if this message appears consistently."
-            )
+            if self.items_full_warning == 0:
+                self.emit_event(
+                    'inventory_full',
+                    formatted="Inventory is full. You might want to change your config to recycle more items if this message appears consistently."
+                )
+                self.items_full_warning = 1
+        else:
+            self.items_full_warning = 0
         return self.ignore_item_count or has_space_for_loot
 
     def work(self):
@@ -46,8 +51,13 @@ class SpinFort(Datastore, BaseTask):
 
         if not self.should_run() or len(forts) == 0:
             if len(forts) > 0:
-                self.bot.recent_forts = self.bot.recent_forts[1:] + [forts[0]['id']]
-                self.bot.update_recent_forts()
+                need_to_update = 0
+                for fort in forts:
+                    if fort['id'] not in self.bot.recent_forts:
+                        self.bot.recent_forts = self.bot.recent_forts[1:] + [fort['id']]
+                        need_to_update = 1
+                if need_to_update == 1:
+                    self.bot.update_recent_forts()
             return WorkerResult.SUCCESS
 
         fort = forts[0]
