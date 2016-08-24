@@ -140,6 +140,9 @@ class MoveToFort(BaseTask):
             formatted='Arrived at fort (point).'
         )
         if self.recent_dest_fort:
+            if self.recent_dest_fortname not in ['Random Point', 'Way Fort to RP']:
+                if self.recent_dest_fort['id'] not in self.bot.recent_forts:
+                    self.bot.recent_forts = self.bot.recent_forts[1:] + [self.recent_dest_fort['id']]
             self.recent_dest_fort = None
             self.recent_dest_fortname = 'Unknown'
 
@@ -277,10 +280,12 @@ class MoveToFort(BaseTask):
         if self.bot.config.forts_avoid_circles:
             forts = filter(lambda x: x["id"] not in self.bot.recent_forts, forts)
 
-        self.lure_distance = lure_distance
-
         if (lure_distance > 0):
-            return next_attracted_pts
+            if next_attracted_pts['id'] not in self.bot.recent_forts:
+                self.lure_distance = lure_distance
+                return next_attracted_pts
+
+        self.lure_distance = 0
 
         if len(forts) > 0:
             return forts[0]
