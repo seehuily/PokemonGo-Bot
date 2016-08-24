@@ -7,6 +7,7 @@
     "encrypt_location": "",
     "websocket_server": false,
     "heartbeat_threshold": 10,
+    "enable_social": true,
     "tasks": [
       {
         "type": "HandleSoftBan"
@@ -35,6 +36,7 @@
       {
         "type": "IncubateEggs",
         "config": {
+          "enabled": true,
           "longer_eggs_first": true,
           "min_interval": 120
         }
@@ -69,8 +71,8 @@
                 "transfer": true,
                     "// 'transfer_wait_min' and 'transfer_wait_max' are the minimum and maximum": {},
                     "// time to wait when transferring a pokemon": {},
-                "transfer_wait_min": 2,
-                "transfer_wait_max": 4,
+                "transfer_wait_min": 3,
+                "transfer_wait_max": 5,
                     "// the 'evolve' parameter activate or deactivate the evolution of pokemons": {},
                     "// at false, no pokemon is going to be evolved, ever": {},
                     "// at false, you will still get the log information of what the": {},
@@ -153,6 +155,7 @@
       {
         "type": "RecycleItems",
         "config": {
+          "enabled": true,
           "min_empty_space": 15,
           "max_balls_keep": 150,
           "max_potions_keep": 50,
@@ -166,18 +169,20 @@
             "Revive":         { "keep" : 30 },
             "Razz Berry":     { "keep" : 100 }
           },
-          "recycle_wait_min": 1,
-          "recycle_wait_max": 4
+          "recycle_wait_min": 3,
+          "recycle_wait_max": 5
         }
       },
         {
           "type": "CatchPokemon",
           "config": {
+            "enabled": true,
             "catch_visible_pokemon": true,
             "catch_lured_pokemon": true,
             "min_ultraball_to_keep": 5,
             "berry_threshold": 0.35,
             "vip_berry_threshold": 0.9,
+            "treat_unseen_as_vip": true,
             "catch_throw_parameters": {
               "excellent_rate": 0.1,
               "great_rate": 0.5,
@@ -188,25 +193,27 @@
                   "catch_simulation": {
                     "flee_count": 3,
                     "flee_duration": 2,
-                    "catch_wait_min": 2,
+                    "catch_wait_min": 3,
                     "catch_wait_max": 6,
-                    "berry_wait_min": 2,
-                    "berry_wait_max": 3,
-                    "changeball_wait_min": 2,
-                    "changeball_wait_max": 3
+                    "berry_wait_min": 3,
+                    "berry_wait_max": 5,
+                    "changeball_wait_min": 3,
+                    "changeball_wait_max": 5
                   }
           }
         },
       {
         "type": "SpinFort",
         "config": {
-          "spin_wait_min": 2,
-          "spin_wait_max": 3
+          "enabled": true,
+          "spin_wait_min": 3,
+          "spin_wait_max": 5
         }
       },
       {
         "type": "MoveToFort",
         "config": {
+            "enabled": true,
             "lure_attraction": true,
             "lure_max_distance": 2000
         }
@@ -214,6 +221,7 @@
       {
         "type": "FollowSpiral",
         "config": {
+          "enabled": true,
           "diameter": 4,
           "step_size": 70
         }

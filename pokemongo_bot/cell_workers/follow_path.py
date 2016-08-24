@@ -6,7 +6,7 @@ import json
 from pokemongo_bot.base_task import BaseTask
 from pokemongo_bot.cell_workers.utils import distance, i2f, format_dist
 from pokemongo_bot.human_behaviour import sleep
-from pokemongo_bot.walkers.step_walker import StepWalker
+from pokemongo_bot.walkers.walker_factory import walker_factory
 from pgoapi.utilities import f2i
 from random import uniform
 from utils import getSeconds
@@ -32,6 +32,7 @@ class FollowPath(BaseTask):
         self.number_lap_max = self.config.get("number_lap", -1) # if < 0, then the number is inf.
         self.timer_restart_min = getSeconds(self.config.get("timer_restart_min", "00:20:00"))
         self.timer_restart_max = getSeconds(self.config.get("timer_restart_max", "02:00:00"))
+        self.walker = self.config.get('walker', 'StepWalker')
 
         if self.timer_restart_min > self.timer_restart_max:
             raise ValueError('path timer_restart_min is bigger than path timer_restart_max') #TODO there must be a more elegant way to do it...
@@ -63,11 +64,11 @@ class FollowPath(BaseTask):
                     'position': point_tuple
                 }
             )
-            points[index] = self.lat_lng_tuple_to_dict(point_tuple)
+            points[index] = self.point_tuple_to_dict(point_tuple)
         return points
 
-    def lat_lng_tuple_to_dict(self, tpl):
-        return {'lat': tpl[0], 'lng': tpl[1]}
+    def point_tuple_to_dict(self, tpl):
+        return {'lat': tpl[0], 'lng': tpl[1], 'alt': tpl[2]}
 
     def load_gpx(self):
         gpx_file = open(self.path_file, 'r')
@@ -133,15 +134,18 @@ class FollowPath(BaseTask):
         point = self.points[self.ptr]
         lat = float(point['lat'])
         lng = float(point['lng'])
-        alt = uniform(self.bot.config.alt_min, self.bot.config.alt_max)
+
         if 'alt' in point:
             alt = float(point['alt'])
+        else:
+            alt = uniform(self.bot.config.alt_min, self.bot.config.alt_max)
 
         if self.bot.config.walk_max > 0:
-            step_walker = StepWalker(
+            step_walker = walker_factory(self.walker,
                 self.bot,
                 lat,
-                lng
+                lng,
+                alt
             )
 
             is_at_destination = False
