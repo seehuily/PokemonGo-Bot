@@ -1,3 +1,4 @@
+
 {
     "auth_service": "ptc",
     "username": "YOUR_USERNAME",
@@ -7,6 +8,7 @@
     "encrypt_location": "",
     "websocket_server": false,
     "heartbeat_threshold": 10,
+    "enable_social": true,
     "tasks": [
       {
         "type": "HandleSoftBan"
@@ -46,8 +48,11 @@
       {
         "type": "IncubateEggs",
         "config": {
+          "enabled": true,
           "longer_eggs_first": true,
-          "min_interval": 120
+          "min_interval": 120,
+         "infinite": [2,5,10],
+         "breakable": [2,5,10]
         }
       },
       {
@@ -72,6 +77,7 @@
       {
         "type": "TransferPokemon",
         "config": {
+          "enabled": true,
           "min_free_slot": 50,
           "transfer_wait_min": 1,
           "transfer_wait_max": 4
@@ -88,18 +94,21 @@
       {
         "type": "EvolvePokemon",
         "config": {
+          "enabled": false,
           "evolve_all": "all",
           "first_evolve_by": "iv",
           "evolve_above_cp": 10,
           "evolve_above_iv": 0.93,
           "logic": "and",
-          "evolve_speed": 20,
+          "min_evolve_speed": 25,
+          "max_evolve_speed": 30,
           "use_lucky_egg": false
         }
       },
       {
         "type": "RecycleItems",
         "config": {
+          "enabled": true,
           "min_empty_space": -1,
           "max_balls_keep": 150,
           "max_potions_keep": 50,
@@ -123,11 +132,13 @@
       {
         "type": "CatchPokemon",
         "config": {
+          "enabled": true,
           "catch_visible_pokemon": true,
           "catch_lured_pokemon": true,
           "min_ultraball_to_keep": 5,
           "berry_threshold": 0.35,
           "vip_berry_threshold": 0.9,
+          "treat_unseen_as_vip": true,
           "catch_throw_parameters": {
             "excellent_rate": 0.1,
             "great_rate": 0.2,
@@ -151,6 +162,7 @@
       {
         "type": "SpinFort",
         "config": {
+          "enabled": true,
           "spin_wait_min": 2,
           "spin_wait_max": 3
         }
@@ -158,6 +170,7 @@
       {
         "type": "MoveToFort",
         "config": {
+          "enabled": true,
           "lure_attraction": true,
           "lure_max_distance": 2000,
           "ignore_item_count": true,
