@@ -1,8 +1,11 @@
 {
-    "auth_service": "ptc",
+    "auth_service": "google",
     "username": "YOUR_USERNAME",
     "password": "YOUR_PASSWORD",
-    "location": "37.805724, -122.416611",
+    "location": "SOME_LOCATION",
+    "favorite_locations":[
+        {"name": "Milan", "coords": "45.472849,9.177567"}
+    ],
     "gmapkey": "GOOGLE_MAPS_API_KEY",
     "encrypt_location": "",
     "websocket_server": false,
@@ -10,17 +13,18 @@
     "enable_social": true,
     "tasks": [
       {
-        "type": "HandleSoftBan"
+        "//NOTE: This task MUST be placed on the top of task list": {},
+        "type": "RandomAlivePause",
+        "config": {
+          "enabled": false,
+          "min_duration": "00:00:10",
+          "max_duration": "00:10:00",
+          "min_interval": "00:05:00",
+          "max_interval": "01:30:00"
+        }
       },
       {
-        "type": "SleepSchedule",
-        "config": {
-          "enabled": true,
-          "time": "22:54",
-          "duration":"7:46",
-          "time_random_offset": "00:24",
-          "duration_random_offset": "00:43"
-        }
+        "type": "HandleSoftBan"
       },
       {
         "type": "CompleteTutorial",
@@ -31,7 +35,11 @@
         }
       },
       {
-         "type": "CollectLevelUpReward"
+        "type": "CollectLevelUpReward",
+        "config": {
+          "collect_reward": true,
+          "level_limit": -1
+        }
       },
       {
         "type": "IncubateEggs",
@@ -44,9 +52,9 @@
       {
         "type": "UpdateLiveStats",
         "config": {
-          "enabled": true,
+          "enabled": false,
           "min_interval": 10,
-          "stats": ["username", "level_stats", "uptime", "stardust_earned", "xp_earned", "xp_per_hour", "stops_visited"],
+          "stats": ["uptime", "stardust_earned", "xp_earned", "xp_per_hour", "stops_visited"],
           "terminal_log": true,
           "terminal_title": true
         }
@@ -100,15 +108,12 @@
           "max_berries_keep": 70,
           "max_revives_keep": 70,
           "item_filter": {
-            "Pokeball":       { "keep" : 30 },
-            "Greatball":      { "keep" : 30 },
-            "Ultraball":      { "keep" : 100 },
-            "Potion":         { "keep" : 0 },
-            "Super Potion":   { "keep" : 0 },
-            "Hyper Potion":   { "keep" : 20 },
-            "Max Potion":     { "keep" : 30 },
-            "Revive":         { "keep" : 20 },
-            "Razz Berry":     { "keep" : 80 }
+            "Pokeball":       { "keep" : 100 },
+            "Potion":         { "keep" : 10 },
+            "Super Potion":   { "keep" : 20 },
+            "Hyper Potion":   { "keep" : 30 },
+            "Revive":         { "keep" : 30 },
+            "Razz Berry":     { "keep" : 100 }
           },
           "recycle_wait_min": 3,
           "recycle_wait_max": 5
@@ -156,9 +161,7 @@
         "config":{
           "enabled": true,
           "lure_attraction": true,
-          "lure_max_distance": 2000,
-          "bot_zone": true,
-          "zone_radius": 500
+          "lure_max_distance": 2000
         }
       },
       {
@@ -173,7 +176,7 @@
     "map_object_cache_time": 5,
     "forts": {
       "avoid_circles": true,
-      "max_circle_size": 30,
+      "max_circle_size": 50,
       "cache_recent_forts": true
     },
     "pokemon_bag": {
@@ -192,11 +195,27 @@
     "walk_min": 2.16,
     "alt_min": 500,
     "alt_max": 1000,
+    "sleep_schedule": [
+      {
+        "time": "12:00",
+        "duration": "5:30",
+        "time_random_offset": "00:30",
+        "duration_random_offset": "00:30",
+        "wake_up_at_location": ""
+      },
+      {
+        "time": "17:45",
+        "duration": "3:00",
+        "time_random_offset": "01:00",
+        "duration_random_offset": "00:30",
+        "wake_up_at_location": ""
+      }
+    ],
     "debug": false,
     "test": false,
     "health_record": true,
     "location_cache": true,
-    "distance_unit": "m",
+    "distance_unit": "km",
     "reconnecting_timeout": 15,
     "logging_color": true,
     "daily_catch_limit": 800,
@@ -465,5 +484,6 @@
         "Muk": {},
         "Weezing": {},
         "Flareon": {}
+
     }
 }

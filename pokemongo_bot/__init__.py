@@ -25,6 +25,7 @@ from event_manager import EventManager
 from human_behaviour import sleep
 from item_list import Item
 from metrics import Metrics
+from sleep_schedule import SleepSchedule
 from pokemongo_bot.event_handlers import LoggingHandler, SocketIoHandler, ColoredLoggingHandler, SocialHandler
 from pokemongo_bot.socketio_server.runner import SocketIoRunner
 from pokemongo_bot.websocket_remote_control import WebsocketRemoteControl
@@ -107,6 +108,8 @@ class PokemonGoBot(Datastore):
     def start(self):
         self._setup_event_system()
         self._setup_logging()
+        self.sleep_schedule = SleepSchedule(self, self.config.sleep_schedule) if self.config.sleep_schedule else None
+        if self.sleep_schedule: self.sleep_schedule.work()
         self._setup_api()
         self._load_recent_forts()
         init_inventory(self)
@@ -221,6 +224,22 @@ class PokemonGoBot(Datastore):
         )
         self.event_manager.register_event(
             'bot_random_pause',
+            parameters=(
+                'time_hms',
+                'resume'
+            )
+        )
+
+        # random alive pause
+        self.event_manager.register_event(
+            'next_random_alive_pause',
+            parameters=(
+                'time',
+                'duration'
+            )
+        )
+        self.event_manager.register_event(
+            'bot_random_alive_pause',
             parameters=(
                 'time_hms',
                 'resume'
@@ -571,6 +590,8 @@ class PokemonGoBot(Datastore):
         self.health_record.heartbeat()
         self.cell = self.get_meta_cell()
 
+        if self.sleep_schedule: self.sleep_schedule.work()
+
         now = time.time() * 1000
 
         for fort in self.cell["forts"]:
@@ -641,6 +662,10 @@ class PokemonGoBot(Datastore):
             lng = self.api._position_lng
         if alt is None:
             alt = self.api._position_alt
+
+        # dont cache when teleport_to
+        if self.api.teleporting:
+            return
 
         if cells == []:
             location = self.position[0:2]
@@ -1137,6 +1162,12 @@ class PokemonGoBot(Datastore):
                 )
 
     def get_pos_by_name(self, location_name):
+        # Check if given location name, belongs to favorite_locations
+        favorite_location_coords = self._get_pos_by_fav_location(location_name)
+
+        if favorite_location_coords is not None:
+            return favorite_location_coords
+
         # Check if the given location is already a coordinate.
         if ',' in location_name:
             possible_coordinates = re.findall(
@@ -1155,6 +1186,26 @@ class PokemonGoBot(Datastore):
         loc = geolocator.geocode(location_name, timeout=10)
 
         return float(loc.latitude), float(loc.longitude), float(loc.altitude)
+
+    def _get_pos_by_fav_location(self, location_name):
+
+        location_name = location_name.lower()
+        coords = None
+
+        for location in self.config.favorite_locations:
+            if location.get('name').lower() == location_name:
+                coords = re.findall(
+                    "[-]?\d{1,3}[.]\d{3,7}", location.get('coords').strip()
+                )
+                if len(coords) >= 2:
+                    self.logger.info('Favorite location found: {} ({})'.format(location_name, coords))
+                break
+
+        #TODO: This is real bad
+        if coords is None:
+            return coords
+        else:
+            return float(coords[0]), float(coords[1]), (float(coords[2]) if len(coords) == 3 else self.alt)
 
     def heartbeat(self):
         # Remove forts that we can now spin again.

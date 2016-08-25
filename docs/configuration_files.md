@@ -80,6 +80,7 @@ Document the configuration options of PokemonGo-Bot.
 |`pokemon_bag.show_at_start`    | false   |                   At start, bot will show all pokemon in the bag.
 |`pokemon_bag.show_count`    | false   |                   Show amount of each pokemon.
 |`pokemon_bag.pokemon_info`    | []   |                   Check any config example file to see available settings.
+|`favorite_locations`    | []   | Allows you to define a collection of locations and coordinates, allowing rapid switch using a "label" on your location config
 
 
 ## Configuring Tasks
@@ -95,10 +96,10 @@ The behaviors of the bot are configured via the `tasks` key in the `config.json`
 * EvolvePokemon
   * `evolve_all`: Default `NONE` | Set to `"all"` to evolve Pokémon if possible when the bot starts. Can also be set to individual Pokémon as well as multiple separated by a comma. e.g "Pidgey,Rattata,Weedle,Zubat"
   * `min_evolve_speed`: Default `25` | Minimum seconds to wait between each evolution 
-  * `min_evolve_speed`: Default `30` | Maximum seconds to wait between each evolution
+  * `max_evolve_speed`: Default `30` | Maximum seconds to wait between each evolution
   * `use_lucky_egg`: Default: `False`
 * FollowPath
-  * `path_mode`: Default `loop` | Set the mode for the path navigator (loop or linear).
+  * `path_mode`: Default `loop` | Set the mode for the path navigator (loop, linear or single).
   * `path_file`: Default `NONE` | Set the file containing the waypoints for the path navigator.
 * FollowSpiral
 * HandleSoftBan
@@ -125,6 +126,9 @@ The behaviors of the bot are configured via the `tasks` key in the `config.json`
   * `min_free_slot`: Default `5` | Once the pokebag has less empty slots than this amount, the transfer process is triggered. | Big values (i.e 9999) will trigger the transfer process after each catch.
 * UpdateLiveStats
 * [UpdateLiveInventory](#updateliveinventory-settings)
+* CollectLevelUpReward
+  * `collect_reward`: Default `True` | Collect level up rewards.
+  * `level_limit`: Default `-1` | Bot will stop automatically after trainer reaches level limit. Set to `-1` to disable.
 
 
 ### Example configuration:
@@ -495,7 +499,7 @@ If you want to make your bot behave as it did prior to the catch_simulation upda
 ### Description
 [[back to top](#table-of-contents)]
 
-This task will fetch current pokemon spawns from /raw_data of an PokemonGo-Map instance. For information on how to properly setup PokemonGo-Map have a look at the Github page of the project [here](https://github.com/AHAAAAAAA/PokemonGo-Map/). There is an example config in `config/config.json.map.example`
+This task will fetch current pokemon spawns from /raw_data of an PokemonGo-Map instance. For information on how to properly setup PokemonGo-Map have a look at the Github page of the project [here](https://github.com/PokemonGoMap/PokemonGo-Map). There is an example config in `config/config.json.map.example`
 
 ### Options
 [[back to top](#table-of-contents)]
@@ -506,6 +510,7 @@ This task will fetch current pokemon spawns from /raw_data of an PokemonGo-Map i
    - `priority` - Will move to the pokemon with the highest priority assigned (tie breaking by distance)
 * `prioritize_vips` - Will prioritize vips in distance and priority mode above all normal pokemon if set to true
 * `min_time` - Minimum time the pokemon has to be available before despawn
+* `min_ball` - Minimum amount of balls required to run task
 * `max_distance` - Maximum distance the pokemon is allowed to be when walking, ignored when sniping
 * `snipe`:
    - `True` - Will teleport to target pokemon, encounter it, teleport back then catch it
@@ -559,14 +564,30 @@ This task will fetch current pokemon spawns from /raw_data of an PokemonGo-Map i
 
 Walk to the specified locations loaded from .gpx or .json file. It is highly recommended to use website such as [GPSies](http://www.gpsies.com) which allow you to export your created track in JSON file. Note that you'll have to first convert its JSON file into the format that the bot can understand. See [Example of pier39.json] below for the content. I had created a simple python script to do the conversion.
 
+The json file can contain for each point an optional `loiter` field. This
+indicated the number of seconds the bot should loiter after reaching the point.
+During this time, the next Task in the configuration file is executed, e.g. a
+MoveToFort task. This allows the bot to walk around the waypoint looking for
+forts for a limited time.
+
 ### Options
 [[back to top](#table-of-contents)]
-* `path_mode` - linear, loop
+* `path_mode` - linear, loop, single
    - `loop` - The bot will walk along all specified waypoints and then move directly to the first waypoint again.
    - `linear` - The bot will turn around at the last waypoint and along the given waypoints in reverse order.
-* `path_start_mode` - first
+   - `single` - The bot will walk the path only once.
+* `path_start_mode` - first, closest
+   - `first` - The bot will start at the first point of the path.
+   - `closest` - The bot will start the path at the point which is the closest to the current bot location.
 * `path_file` - "/path/to/your/path.json"
 
+### Notice
+If you use the `single` `path_mode` without e.g. a `MoveToFort` task, your bot 
+with /not move at all/ when the path is finished. Similarly, if you use the
+`loiter` option in your json path file without a following `MoveToFort` or
+similar task, your bot will not move during the loitering period. Please
+make sure, when you use `single` mode or the `loiter` option, that another
+move-type task follows the `FollowPath` task in your `config.json`.
 
 ### Sample Configuration
 [[back to top](#table-of-contents)]
