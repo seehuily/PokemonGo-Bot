@@ -3,6 +3,9 @@
     "username": "YOUR_USERNAME",
     "password": "YOUR_PASSWORD",
     "location": "SOME_LOCATION",
+    "favorite_locations":[
+        {"name": "Milan", "coords": "45.472849,9.177567"}
+    ],
     "gmapkey": "GOOGLE_MAPS_API_KEY",
     "encrypt_location": "",
     "websocket_server": false,
@@ -10,17 +13,18 @@
     "enable_social": true,
     "tasks": [
       {
-        "type": "HandleSoftBan"
-      },
-      {
-        "type": "SleepSchedule",
+        "//NOTE: This task MUST be placed on the top of task list": {},
+        "type": "RandomAlivePause",
         "config": {
           "enabled": false,
-          "time": "22:54",
-          "duration":"7:46",
-          "time_random_offset": "00:24",
-          "duration_random_offset": "00:43"
+          "min_duration": "00:00:10",
+          "max_duration": "00:10:00",
+          "min_interval": "00:05:00",
+          "max_interval": "01:30:00"
         }
+      },
+      {
+        "type": "HandleSoftBan"
       },
       {
         "type": "CompleteTutorial",
@@ -31,7 +35,11 @@
         }
       },
       {
-         "type": "CollectLevelUpReward"
+        "type": "CollectLevelUpReward",
+        "config": {
+          "collect_reward": true,
+          "level_limit": -1
+        }
       },
       {
         "type": "IncubateEggs",
@@ -178,6 +186,22 @@
     "walk_min": 2.16,
     "alt_min": 500,
     "alt_max": 1000,
+    "sleep_schedule": [
+      {
+        "time": "12:00",
+        "duration": "5:30",
+        "time_random_offset": "00:30",
+        "duration_random_offset": "00:30",
+        "wake_up_at_location": ""
+      },
+      {
+        "time": "17:45",
+        "duration": "3:00",
+        "time_random_offset": "01:00",
+        "duration_random_offset": "00:30",
+        "wake_up_at_location": ""
+      }
+    ],
     "debug": false,
     "test": false,
     "health_record": true,

@@ -180,6 +180,7 @@ def main():
                 formatted='Bot caught SIGINT. Shutting down.'
             )
             report_summary(bot)
+
     except Exception as e:
         # always report session summary and then raise exception
         if bot:
@@ -212,7 +213,6 @@ def main():
                         )
 
 
-
 def report_summary(bot):
     if bot.metrics.start_time is None:
         return  # Bot didn't actually start, no metrics to show.
@@ -224,9 +224,9 @@ def report_summary(bot):
     logger.info('Total XP Earned: {}  Average: {:.2f}/h'.format(metrics.xp_earned(), metrics.xp_per_hour()))
     logger.info('Travelled {:.2f}km'.format(metrics.distance_travelled()))
     logger.info('Visited {} stops'.format(metrics.visits['latest'] - metrics.visits['start']))
-    logger.info('Encountered {} pokemon, {} caught, {} released, {} evolved, {} never seen before'
+    logger.info('Encountered {} pokemon, {} caught, {} released, {} evolved, {} never seen before ({})'
                 .format(metrics.num_encounters(), metrics.num_captures(), metrics.releases,
-                        metrics.num_evolutions(), metrics.num_new_mons()))
+                        metrics.num_evolutions(), metrics.num_new_mons(), metrics.uniq_caught()))
     logger.info('Threw {} pokeball{}'.format(metrics.num_throws(), '' if metrics.num_throws() == 1 else 's'))
     logger.info('Earned {} Stardust'.format(metrics.earned_dust()))
     logger.info('Hatched eggs {}'.format(metrics.hatched_eggs(0)))
@@ -570,7 +570,7 @@ def init_config():
         type=float,
         default=8.0
     )
-    
+
     add_config(
          parser,
          load,
@@ -579,7 +579,7 @@ def init_config():
          type=bool,
          default=True
     )
-    
+
     # Start to parse other attrs
     config = parser.parse_args()
     if not config.username and 'username' not in load:
@@ -587,6 +587,7 @@ def init_config():
     if not config.password and 'password' not in load:
         config.password = getpass("Password: ")
 
+    config.favorite_locations = load.get('favorite_locations', [])
     config.encrypt_location = load.get('encrypt_location', '')
     config.catch = load.get('catch', {})
     config.release = load.get('release', {})
@@ -594,6 +595,7 @@ def init_config():
     config.raw_tasks = load.get('tasks', [])
     config.daily_catch_limit = load.get('daily_catch_limit', 800)
     config.vips = load.get('vips', {})
+    config.sleep_schedule = load.get('sleep_schedule', [])
 
     if config.map_object_cache_time < 0.0:
         parser.error("--map_object_cache_time is out of range! (should be >= 0.0)")
