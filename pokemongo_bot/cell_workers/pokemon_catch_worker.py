@@ -264,7 +264,7 @@ class PokemonCatchWorker(Datastore, BaseTask):
         return LOGIC_TO_FUNCTION[pokemon_config.get('logic', default_logic)](*catch_results.values())
 
     def _should_catch_pokemon(self, pokemon):
-        return self._pokemon_matches_config(self.bot.config.catch, pokemon)
+        return self._pokemon_matches_config(self.bot.config.catch, pokemon) or self._is_vip_pokemon(pokemon)
 
     def _is_vip_pokemon(self, pokemon):
         # having just a name present in the list makes them vip

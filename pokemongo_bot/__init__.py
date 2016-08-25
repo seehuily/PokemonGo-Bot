@@ -87,7 +87,7 @@ class PokemonGoBot(Datastore):
         self.alt = 1
         self.alt = self.config.gps_default_altitude
         self.new_pokemon_list = []
-        self.ignore_eid_list = []
+        self.ignore_eid_list = [None] * config.forts_max_circle_size
 
         # Make our own copy of the workers for this instance
         self.workers = []
@@ -189,9 +189,9 @@ class PokemonGoBot(Datastore):
                 'duration',
                 'resume'
             )
-        )  
-        
-        
+        )
+
+
         self.event_manager.register_event('location_cache_error')
 
         self.event_manager.register_event('bot_start')
@@ -941,7 +941,7 @@ class PokemonGoBot(Datastore):
         self.logger.info('')
 
     def ignore_list_insert(self, eid):
-        self.ignore_eid_list.append(eid)
+        self.ignore_eid_list = self.ignore_eid_list[1:] + [eid]
 
     def ignore_list_get(self):
         return self.ignore_eid_list
@@ -952,7 +952,7 @@ class PokemonGoBot(Datastore):
     def add_to_new_pokemon_list(self, pokemon):
         self.new_pokemon_list.append(pokemon)
 
-        npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M:%S") + ' IV:{:0<4} {:0>2}/{:0>2}/{:0>2} Capture ({}), CP:{}\n'.format(
+        npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M") + ' IV:{:0<4} {:0>2}/{:0>2}/{:0>2} C({}), CP:{}\n'.format(
                 pokemon.iv, pokemon.iv_attack, pokemon.iv_defense, pokemon.iv_stamina, Pokemons.name_for(pokemon.pokemon_id), pokemon.cp)
         try:
             with open(self.caught_log_file, 'a') as outfile:
@@ -975,7 +975,7 @@ class PokemonGoBot(Datastore):
 
             # Not a save delete, if we have two identical (pokemon_id, cp, A,D,S) entries, only one will be deleted.
             self.new_pokemon_list.remove(gpokemon)
-            npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M:%S") + ' IV:{:0<4} {:0>2}/{:0>2}/{:0>2} Release ({}), CP:{}\n'.format(
+            npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M") + ' IV:{:0<4} {:0>2}/{:0>2}/{:0>2} R({}), CP:{}\n'.format(
                     gpokemon.iv, gpokemon.iv_attack, gpokemon.iv_defense, gpokemon.iv_stamina, Pokemons.name_for(gpokemon.pokemon_id), gpokemon.cp)
             try:
                 with open(self.caught_log_file, 'a') as outfile:
@@ -1019,7 +1019,7 @@ class PokemonGoBot(Datastore):
             if show_candies:
                 line_p += '[{} candies]'.format(pokes[0].candy_quantity)
             line_p += ': '
-            
+
             poke_info = ['({})'.format(', '.join([get_poke_info(x, p) for x in poke_info_displayed])) for p in pokes]
             self.logger.info(line_p + ' | '.join(poke_info))
 
