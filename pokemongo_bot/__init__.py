@@ -977,7 +977,7 @@ class PokemonGoBot(Datastore):
     def add_to_new_pokemon_list(self, pokemon):
         self.new_pokemon_list.append(pokemon)
 
-        npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M") + ' IV:{:0<4} {:0>2}/{:0>2}/{:0>2} C({}), CP:{}\n'.format(
+        npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M") + '|{:0<4} {:x}{:x}{:x} C({} {}\n'.format(
                 pokemon.iv, pokemon.iv_attack, pokemon.iv_defense, pokemon.iv_stamina, Pokemons.name_for(pokemon.pokemon_id), pokemon.cp)
         try:
             with open(self.caught_log_file, 'a') as outfile:
@@ -1000,7 +1000,7 @@ class PokemonGoBot(Datastore):
 
             # Not a save delete, if we have two identical (pokemon_id, cp, A,D,S) entries, only one will be deleted.
             self.new_pokemon_list.remove(gpokemon)
-            npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M") + ' IV:{:0<4} {:0>2}/{:0>2}/{:0>2} R({}), CP:{}\n'.format(
+            npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M") + '|{:0<4} {:x}{:x}{:x} R({} {}\n'.format(
                     gpokemon.iv, gpokemon.iv_attack, gpokemon.iv_defense, gpokemon.iv_stamina, Pokemons.name_for(gpokemon.pokemon_id), gpokemon.cp)
             try:
                 with open(self.caught_log_file, 'a') as outfile:
