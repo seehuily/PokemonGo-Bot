@@ -34,16 +34,19 @@ class MyMQTTClass:
     def publish(self, channel, message):
         self._mqttc.publish(channel, message)
     def connect_to_mqtt(self):
-        self._mqttc.connect("broker.pikabot.org", 1883, 60)
-        # Enable this line if you are doing the snip code, off stress
-        self._mqttc.subscribe("pgo/#", 0)
+        try:
+            self._mqttc.connect("broker.pikabot.org", 1883, 60)
+            # Enable this line if you are doing the snip code, off stress
+            self._mqttc.subscribe("pgo/#", 0)
+        except TypeError:
+            return
     def run(self):
         self._mqttc.loop_forever()
 class SocialHandler(EventHandler):
     def __init__(self, bot):
         self.bot = bot
         try:
-            self.mqttc = MyMQTTClass(bot)
+            self.mqttc = MyMQTTClass(bot, self.bot.config.client_id)
             self.mqttc.connect_to_mqtt()
             thread.start_new_thread(self.mqttc.run)
         except socket_error as serr:
