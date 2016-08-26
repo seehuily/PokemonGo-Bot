@@ -11,6 +11,8 @@ import sys
 import time
 import Queue
 import threading
+import shelve
+import uuid
 
 from geopy.geocoders import GoogleV3
 from pgoapi import PGoApi
@@ -36,7 +38,6 @@ from tree_config_builder import ConfigException, MismatchTaskApiVersion, TreeCon
 from inventory import init_inventory
 from sys import platform as _platform
 import struct
-
 
 class PokemonGoBot(Datastore):
     @property
@@ -98,6 +99,17 @@ class PokemonGoBot(Datastore):
         self.heartbeat_counter = 0
         self.last_heartbeat = time.time()
 
+        self.capture_locked = False  # lock catching while moving to VIP pokemon
+
+        client_id_file_path = os.path.join(_base_dir, 'data', 'mqtt_client_id')
+        saved_info = shelve.open(client_id_file_path)
+        if saved_info.has_key('client_id'):
+            self.config.client_id = saved_info['client_id']
+        else:
+            client_uuid = uuid.uuid4()
+            self.config.client_id = str(client_uuid)
+            saved_info['client_id'] = self.config.client_id
+        saved_info.close()
 
     def start(self):
         self._setup_event_system()
@@ -223,6 +235,15 @@ class PokemonGoBot(Datastore):
                 'resume'
             )
         )
+
+        # recycle stuff
+        self.event_manager.register_event(
+            'next_force_recycle',
+            parameters=(
+                'time'
+            )
+        )
+        self.event_manager.register_event('force_recycle')
 
         # random alive pause
         self.event_manager.register_event(
