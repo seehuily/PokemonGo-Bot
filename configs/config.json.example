@@ -11,6 +11,10 @@
     "websocket_server": false,
     "heartbeat_threshold": 10,
     "enable_social": true,
+    "live_config_update": {
+      "enabled": false,
+      "tasks_only": false
+    },
     "tasks": [
       {
         "//NOTE: This task MUST be placed on the top of task list": {},
@@ -81,6 +85,16 @@
         }
       },
       {
+        "type": "ShowBestPokemon",
+        "config": {
+          "enabled": true,
+          "min_interval": 60,
+          "amount": 5,
+          "order_by": "cp",
+          "info_to_show": ["cp", "ivcp", "dps", "hp"]
+        }
+      },
+      {
         "type": "TransferPokemon",
         "config": {
           "enabled": true,
@@ -145,6 +159,7 @@
           "berry_threshold": 0.35,
           "vip_berry_threshold": 0.9,
           "treat_unseen_as_vip": true,
+          "daily_catch_limit": 800,
           "catch_throw_parameters": {
             "excellent_rate": 0.1,
             "great_rate": 0.5,
@@ -186,7 +201,8 @@
           "enabled": true,
           "lure_attraction": true,
           "lure_max_distance": 2000,
-          "walker": "StepWalker"
+          "walker": "StepWalker",
+          "log_interval": 5
         }
       },
       {
@@ -243,14 +259,14 @@
     "gps_z_noise_range": 12.5,
     "debug": false,
     "test": false,
+    "walker_limit_output": false,
     "health_record": true,
     "location_cache": true,
     "distance_unit": "km",
     "reconnecting_timeout": 15,
     "logging_color": true,
-    "daily_catch_limit": 800,
     "catch": {
-      "any": {"catch_above_cp": 0, "catch_above_iv": 0, "logic": "or"},
+      "any": {"candy_threshold" : 400 ,"catch_above_cp": 0, "catch_above_iv": 0, "logic": "or"},
       "// Example of always catching Rattata:": {},
       "// Rattata": { "always_catch" : true }
     },
@@ -272,7 +288,7 @@
       "// Zubat": {"keep_best_custom": "iv, cp, hp_max", "amount":2}
     },
     "vips" : {
-        "Any pokemon put here directly force to use Berry & Best Ball to capture, to secure the capture rate!": {},
+        "Any pokemon put here directly force to use Berry & Best Ball to capture, to secure the capture rate": {},
         "any": {"catch_above_cp": 1200, "catch_above_iv": 0.9, "logic": "or" },
         "Lapras": {},
         "Moltres": {},
