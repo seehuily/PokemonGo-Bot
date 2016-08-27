@@ -1098,6 +1098,7 @@ class Inventory(object):
 
     def update_web_inventory(self):
         web_inventory = os.path.join(_base_dir, "web", "inventory-%s.json" % self.bot.config.username)
+        web_inventory_gd = os.path.join(self.bot.gd_web_path, "web", "inventory-%s.json" % self.bot.config.username)
 
         if os.path.exists(web_inventory):
             with open(web_inventory, "r") as infile:
@@ -1114,6 +1115,8 @@ class Inventory(object):
 
         with open(web_inventory, "w") as outfile:
             json.dump(json_inventory, outfile)
+        with open(web_inventory_gd, "w") as outfile2:
+            json.dump(json_inventory, outfile2)
 
     def jsonify_inventory(self):
         json_inventory = []
@@ -1129,9 +1132,9 @@ class Inventory(object):
 
         for pokemon in self.pokemons.all():
             json_inventory.append({"inventory_item_data": {"pokemon_data": pokemon._data}})
-        
+
         return json_inventory
-        
+
     def retrieve_inventories_size(self):
         """
         Retrieves the item inventory size
@@ -1229,7 +1232,7 @@ def refresh_inventory():
     :rtype: None
     """
     _inventory.refresh()
-    
+
 def update_web_inventory():
     _inventory.update_web_inventory()
 

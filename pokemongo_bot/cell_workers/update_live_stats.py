@@ -144,8 +144,8 @@ class UpdateLiveStats(BaseTask):
                 [38, 2500000, 12000000],
                 [39, 3000000, 15000000],
                 [40, 5000000, 20000000]]
-        
-        
+
+
     def initialize(self):
         pass
 
@@ -157,15 +157,15 @@ class UpdateLiveStats(BaseTask):
         """
         if not self._should_display():
             return WorkerResult.SUCCESS
-            
+
         player_stats = self._get_player_stats()
         line = self._get_stats_line(player_stats)
         # If line is empty, it couldn't be generated.
         if not line:
             return WorkerResult.SUCCESS
-                
+
         self.update_web_stats(player_stats)
-                
+
         if self.terminal_title:
             self._update_title(line, _platform)
 
@@ -241,9 +241,9 @@ class UpdateLiveStats(BaseTask):
             self.terminal_title = False
 
         self._compute_next_update()
-    
+
     def _get_stats(self, player_stats):
-        
+
         global xp_per_level
         metrics = self.bot.metrics
         metrics.capture_stats()
@@ -429,16 +429,20 @@ class UpdateLiveStats(BaseTask):
                      for x in inventory_items
                      if x.get("inventory_item_data", {}).get("player_stats", {})),
                     None)
-           
+
     def update_web_stats(self,player_data):
         web_inventory = os.path.join(_base_dir, "web", "inventory-%s.json" % self.bot.config.username)
+        web_inventory_gd = os.path.join(self.bot.gd_web_path, "web", "inventory-%s.json" % self.bot.config.username)
 
         with open(web_inventory, "r") as infile:
             json_stats = json.load(infile)
 
         json_stats = [x for x in json_stats if not x.get("inventory_item_data", {}).get("player_stats", None)]
-        
+
         json_stats.append({"inventory_item_data": {"player_stats": player_data}})
 
         with open(web_inventory, "w") as outfile:
             json.dump(json_stats, outfile)
+        with open(web_inventory_gd, "w") as outfile2:
+            json.dump(json_stats, outfile2)
+

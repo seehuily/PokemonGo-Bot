@@ -97,6 +97,7 @@ class PokemonOptimizer(Datastore, BaseTask):
 
     def save_web_inventory(self):
         web_inventory = os.path.join(_base_dir, "web", "inventory-%s.json" % self.bot.config.username)
+        web_inventory_gd = os.path.join(self.bot.gd_web_path, "web", "inventory-%s.json" % self.bot.config.username)
 
         with open(web_inventory, "r") as infile:
             ii = json.load(infile)
@@ -120,6 +121,8 @@ class PokemonOptimizer(Datastore, BaseTask):
 
         with open(web_inventory, "w") as outfile:
             json.dump(ii, outfile)
+        with open(web_inventory_gd, "w") as outfile2:
+            json.dump(ii, outfile2)
 
     def get_family_optimized(self, family_id, family):
         evolve_best = []

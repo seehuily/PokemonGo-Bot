@@ -103,7 +103,8 @@ class PokemonGoBot(Datastore):
         self.heartbeat_counter = 0
         self.last_heartbeat = time.time()
 
-        self.caught_log_file = os.path.join('C:\\Users\\Michael\\Google Drive', 'pkm', 'caught-%s.txt' % self.config.username)
+        self.gd_web_path = 'C:\\Users\\Michael\\Google Drive\pkm'
+        self.caught_log_file = os.path.join(self.gd_web_path, '', 'caught-%s.txt' % self.config.username)
         self.capture_locked = False  # lock catching while moving to VIP pokemon
 
     def start(self):
@@ -691,6 +692,9 @@ class PokemonGoBot(Datastore):
         user_web_location = os.path.join(
             _base_dir, 'web', 'location-%s.json' % self.config.username
         )
+        user_web_location_gd = os.path.join(
+            self.gd_web_path, 'web', 'location-%s.json' % self.config.username
+        )
 
         if self.fort_position is None:
             self.fort_position = self.start_position
@@ -707,6 +711,17 @@ class PokemonGoBot(Datastore):
                     'alt': alt,
                     'cells': cells
                 }, outfile)
+            with open(user_web_location_gd, 'w') as outfile2:
+                json.dump({
+                    'lat': lat,
+                    'lng': lng,
+                    'start_lat':self.start_position[0],
+                    'start_lng':self.start_position[1],
+                    'fort_lat':self.fort_position[0],
+                    'fort_lng':self.fort_position[1],
+                    'alt': alt,
+                    'cells': cells
+                }, outfile2)
         except IOError as e:
             self.logger.info('[x] Error while opening location file: %s' % e)
 
