@@ -35,6 +35,7 @@ from worker_result import WorkerResult
 from tree_config_builder import ConfigException, MismatchTaskApiVersion, TreeConfigBuilder
 from inventory import init_inventory, Pokemons
 from sys import platform as _platform
+from pgoapi.protos.POGOProtos.Enums import BadgeType_pb2
 import struct
 
 
@@ -73,6 +74,7 @@ class PokemonGoBot(Datastore):
             open(os.path.join(_base_dir, 'data', 'pokemon.json'))
         )
         self.item_list = json.load(open(os.path.join(_base_dir, 'data', 'items.json')))
+        # @var Metrics
         self.metrics = Metrics(self)
         self.latest_inventory = None
         self.cell = None
@@ -106,6 +108,16 @@ class PokemonGoBot(Datastore):
         self.gd_web_path = 'C:\\Users\\Michael\\Google Drive\pkm'
         self.caught_log_file = os.path.join(self.gd_web_path, '', 'caught-%s.txt' % self.config.username)
         self.capture_locked = False  # lock catching while moving to VIP pokemon
+
+        client_id_file_path = os.path.join(_base_dir, 'data', 'mqtt_client_id')
+        saved_info = shelve.open(client_id_file_path)
+        key = 'client_id'.encode('utf-8')
+        if key in saved_info:
+            self.config.client_id = saved_info[key]
+        else:
+            self.config.client_id = str(uuid.uuid4())
+            saved_info[key] = self.config.client_id
+        saved_info.close()
 
     def start(self):
         self._setup_event_system()
@@ -144,7 +156,8 @@ class PokemonGoBot(Datastore):
             if self.config.websocket_remote_control:
                 remote_control = WebsocketRemoteControl(self).start()
 
-        self.event_manager = EventManager(*handlers)
+        # @var EventManager
+        self.event_manager = EventManager(self.config.walker_limit_output, *handlers)
         self._register_events()
         if self.config.show_events:
             self.event_manager.event_report()
@@ -172,6 +185,21 @@ class PokemonGoBot(Datastore):
         self.event_manager.register_event('set_start_location')
         self.event_manager.register_event('load_cached_location')
         self.event_manager.register_event('location_cache_ignored')
+
+        #  ignore candy above threshold
+        self.event_manager.register_event(
+            'ignore_candy_above_thresold',
+            parameters=(
+                'name',
+                'amount',
+                'threshold'
+            )
+        )
+
+
+
+
+
         self.event_manager.register_event(
             'position_update',
             parameters=(
@@ -396,7 +424,9 @@ class PokemonGoBot(Datastore):
                 'encounter_id',
                 'latitude',
                 'longitude',
-                'pokemon_id'
+                'pokemon_id',
+                'daily_catch_limit',
+                'caught_last_24_hour',
             )
         )
         self.event_manager.register_event(
@@ -408,6 +438,7 @@ class PokemonGoBot(Datastore):
         self.event_manager.register_event('vip_pokemon')
         self.event_manager.register_event('gained_candy', parameters=('quantity', 'type'))
         self.event_manager.register_event('catch_limit')
+        self.event_manager.register_event('show_best_pokemon', parameters=('pokemons'))
 
         self.event_manager.register_event(
             'new_pokemon_list',
@@ -596,6 +627,15 @@ class PokemonGoBot(Datastore):
         self.event_manager.register_event('transfer_log')
         self.event_manager.register_event('pokestop_log')
         self.event_manager.register_event('softban_log')
+
+        self.event_manager.register_event(
+            'badges',
+            parameters=('badge', 'level')
+        )
+        self.event_manager.register_event(
+            'player_data',
+            parameters=('player_data', )
+        )
 
     def tick(self):
         self.health_record.heartbeat()
@@ -891,7 +931,7 @@ class PokemonGoBot(Datastore):
         return full_path
 
     def _setup_api(self):
-        # instantiate pgoapi
+        # instantiate pgoapi @var ApiWrapper
         self.api = ApiWrapper(config=self.config)
 
         # provide player position on the earth
@@ -1244,7 +1284,51 @@ class PokemonGoBot(Datastore):
             request = self.api.create_request()
             request.get_player()
             request.check_awarded_badges()
-            request.call()
+            responses = request.call()
+
+            if responses['responses']['GET_PLAYER']['success'] == True:
+                #we get the player_data anyway, might as well store it
+                self._player = responses['responses']['GET_PLAYER']['player_data']
+                self.event_manager.emit(
+                    'player_data',
+                    sender=self,
+                    level='debug',
+                    formatted='player_data: {player_data}',
+                    data={'player_data': self._player}
+                )
+            if responses['responses']['CHECK_AWARDED_BADGES']['success'] == True:
+                #store awarded_badges reponse to be used in a task or part of heartbeat
+                self._awarded_badges = responses['responses']['CHECK_AWARDED_BADGES']
+
+            if self._awarded_badges.has_key('awarded_badges'):
+                i = 0
+                for badge in self._awarded_badges['awarded_badges']:
+                    badgelevel = self._awarded_badges['awarded_badge_levels'][i]
+                    badgename = BadgeType_pb2._BADGETYPE.values_by_number[badge].name
+                    i += 1
+                    self.event_manager.emit(
+                        'badges',
+                        sender=self,
+                        level='info',
+                        formatted='awarded badge: {badge}, lvl {level}',
+                        data={'badge': badgename,
+                              'level' : badgelevel }
+                    )
+
+                    #todo move equip badge into its own task once working
+                    #should work but gives errors :'(s
+                    #response = self.api.equip_badge(badge_type=badge)
+                    response = {'responses': "awaiting further testing on api call to equip_badge"}
+                    self.event_manager.emit(
+                        'badges',
+                        sender=self,
+                        level='info',
+                        formatted='equiped badge: {badge}',
+                        data={'badge': response['responses']}
+                    )
+                    human_behaviour.action_delay(3,10)
+
+
         try:
             self.web_update_queue.put_nowait(True)  # do this outside of thread every tick
         except Queue.Full:

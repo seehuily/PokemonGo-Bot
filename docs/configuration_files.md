@@ -45,6 +45,7 @@
 - [Sleep Schedule Task](#sleep-schedule-task)
 - [Random Pause](#random-pause)
 - [Egg Incubator](#egg-incubator)
+- [ShowBestPokemon](#showbestpokemon)
 
 #Configuration files
 
@@ -72,7 +73,8 @@ Document the configuration options of PokemonGo-Bot.
 | `action_wait_min`   | 1       | Set the minimum time setting for anti-ban time randomizer
 | `action_wait_max`   | 4       | Set the maximum time setting for anti-ban time randomizer
 | `debug`            | false   | Let the default value here except if you are developer                                                                                                                                      |
-| `test`             | false   | Let the default value here except if you are developer                                                                                                                                      |                                                                                       |
+| `test`             | false   | Let the default value here except if you are developer                                                                                                                                      |  
+| `walker_limit_output`             | false   | Reduce output from walker functions                                                                                                                                      |                                                                                       |
 | `location_cache`   | true    | Bot will start at last known location if you do not have location set in the config                                                                                                         |
 | `distance_unit`    | km      | Set the unit to display distance in (km for kilometers, mi for miles, ft for feet)                                                                                                          |
 | `evolve_cp_min`           | 300   |                   Min. CP for evolve_all function
@@ -81,6 +83,8 @@ Document the configuration options of PokemonGo-Bot.
 |`pokemon_bag.show_count`    | false   |                   Show amount of each pokemon.
 |`pokemon_bag.pokemon_info`    | []   |                   Check any config example file to see available settings.
 |`favorite_locations`    | []   | Allows you to define a collection of locations and coordinates, allowing rapid switch using a "label" on your location config
+| `live_config_update.enabled`            | false     | Enable live config update
+| `live_config_update.tasks_only`            | false     | True: quick update for Tasks only (without re-login). False: slower update for entire config file.
 
 
 ## Configuring Tasks
@@ -133,7 +137,30 @@ The behaviors of the bot are configured via the `tasks` key in the `config.json`
 * CollectLevelUpReward
   * `collect_reward`: Default `True` | Collect level up rewards.
   * `level_limit`: Default `-1` | Bot will stop automatically after trainer reaches level limit. Set to `-1` to disable.
-
+* All tasks
+  * `log_interval`: Default `0` | Minimum seconds interval before next log of the current task will be printed
+  
+  
+### Specify a custom log_interval for specific task
+  
+  ```
+    {
+      "type": "MoveToFort",
+      "config": {
+        "enabled": true,
+        "lure_attraction": true,
+        "lure_max_distance": 2000,
+        "walker": "StepWalker",
+        "log_interval": 5
+      }
+    }
+   ```
+      
+   Result:
+    
+    2016-08-26 11:43:18,199 [MoveToFort] [INFO] [moving_to_fort] Moving towards pokestop ... - 0.07km
+    2016-08-26 11:43:23,641 [MoveToFort] [INFO] [moving_to_fort] Moving towards pokestop ... - 0.06km
+    2016-08-26 11:43:28,198 [MoveToFort] [INFO] [moving_to_fort] Moving towards pokestop ... - 0.05km
 
 ### Example configuration:
 [[back to top](#table-of-contents)]
@@ -704,6 +731,7 @@ Periodically displays the user inventory in the terminal.
 
 ### Options
 [[back to top](#table-of-contents)]
+
 * `min_interval` : The minimum interval at which the stats are displayed, in seconds (defaults to 120 seconds). The update interval cannot be accurate as workers run synchronously.
 * `show_all_multiple_lines` : Logs all items on inventory using multiple lines. Ignores configuration of 'items'
 * `items` : An array of items to display and their display order (implicitly), see available items below (defaults to []).
@@ -824,4 +852,53 @@ Configure how the bot should use the incubators.
 }
 ```
 
+## ShowBestPokemon
+[[back to top](#table-of-contents)]
 
+### Description
+[[back to top](#table-of-contents)]
+
+Periodically displays the user best pokemon in the terminal.
+
+### Options
+[[back to top](#table-of-contents)]
+
+* `min_interval` : The minimum interval at which the pokemon are displayed, in seconds (defaults to 120 seconds). The update interval cannot be accurate as workers run synchronously.
+* `amount` : Amount of pokemon to show.
+* `order_by` : Stat that will be used to get best pokemons.
+Available Stats: 'cp', 'iv', 'ivcp', 'ncp', 'dps', 'hp', 'level'
+* `info_to_show` : Info to show for each pokemon
+
+Available `info_to_show` :
+```
+'cp',
+'iv_ads',
+'iv_pct',
+'ivcp',
+'ncp',
+'level',
+'hp',
+'moveset',
+'dps'
+```
+
+### Sample configuration
+[[back to top](#table-of-contents)]
+```json
+{
+    "type": "ShowBestPokemon",
+    "config": {
+        "enabled": true,
+        "min_interval": 60,
+        "amount": 5,
+        "order_by": "cp",
+        "info_to_show": ["cp", "ivcp", "dps"]
+    }
+}
+```
+
+### Example console output
+[[back to top](#table-of-contents)]
+```
+2016-08-25 21:20:59,642 [ShowBestPokemon] [INFO] [show_best_pokemon] [Tauros, CP 575, IVCP 0.95, DPS 12.04] | [Grimer, CP 613, IVCP 0.93, DPS 13.93] | [Tangela, CP 736, IVCP 0.93, DPS 14.5] | [Staryu, CP 316, IVCP 0.92, DPS 10.75] | [Gastly, CP 224, IVCP 0.9, DPS 11.7]
+```

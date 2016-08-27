@@ -1096,27 +1096,40 @@ class Inventory(object):
         self.update_web_inventory()
 
 
+    def init_inventory_outfile(self):
+        web_inventory = os.path.join(_base_dir, "web", "inventory-%s.json" % self.bot.config.username)
+
+        if not os.path.exists(web_inventory):
+            json_inventory = []
+        
+            with open(web_inventory, "w") as outfile:
+                json.dump(json_inventory, outfile)
+
+    
     def update_web_inventory(self):
         web_inventory = os.path.join(_base_dir, "web", "inventory-%s.json" % self.bot.config.username)
         web_inventory_gd = os.path.join(self.bot.gd_web_path, "web", "inventory-%s.json" % self.bot.config.username)
 
-        if os.path.exists(web_inventory):
-            with open(web_inventory, "r") as infile:
-                json_inventory = json.load(infile)
+        if not os.path.exists(web_inventory):
+            self.init_inventory_outfile()
+            
+        with open(web_inventory, "r") as infile:
+            json_inventory = json.load(infile)
+            infile.close()
 
-            json_inventory = [x for x in json_inventory if not x.get("inventory_item_data", {}).get("pokedex_entry", None)]
-            json_inventory = [x for x in json_inventory if not x.get("inventory_item_data", {}).get("candy", None)]
-            json_inventory = [x for x in json_inventory if not x.get("inventory_item_data", {}).get("item", None)]
-            json_inventory = [x for x in json_inventory if not x.get("inventory_item_data", {}).get("pokemon_data", None)]
+        json_inventory = [x for x in json_inventory if not x.get("inventory_item_data", {}).get("pokedex_entry", None)]
+        json_inventory = [x for x in json_inventory if not x.get("inventory_item_data", {}).get("candy", None)]
+        json_inventory = [x for x in json_inventory if not x.get("inventory_item_data", {}).get("item", None)]
+        json_inventory = [x for x in json_inventory if not x.get("inventory_item_data", {}).get("pokemon_data", None)]
 
-            json_inventory = json_inventory + self.jsonify_inventory()
-        else:
-            json_inventory = self.jsonify_inventory()
+        json_inventory = json_inventory + self.jsonify_inventory()
 
         with open(web_inventory, "w") as outfile:
             json.dump(json_inventory, outfile)
+            outfile.close
         with open(web_inventory_gd, "w") as outfile2:
             json.dump(json_inventory, outfile2)
+            outfile.close()
 
     def jsonify_inventory(self):
         json_inventory = []
