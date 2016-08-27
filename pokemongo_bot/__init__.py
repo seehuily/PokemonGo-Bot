@@ -11,6 +11,8 @@ import sys
 import time
 import Queue
 import threading
+import shelve
+import uuid
 
 from geopy.geocoders import GoogleV3
 from pgoapi import PGoApi
@@ -87,7 +89,6 @@ class PokemonGoBot(Datastore):
         self.last_map_object = None
         self.last_time_map_object = 0
         self.logger = logging.getLogger(type(self).__name__)
-        self.alt = 1
         self.alt = self.config.gps_default_altitude
         self.new_pokemon_list = []
         self.ignore_eid_list = [None] * config.forts_max_circle_size
