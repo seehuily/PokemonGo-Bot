@@ -113,6 +113,8 @@ data/map-caught-*.json
 data/recent-forts-*.json
 data/caught-*.json
 data/deviceid-*.txt
+data/client_id
+data/mqtt_client_id
 user_web_catchable
 
 # Multiple config
@@ -126,6 +128,7 @@ configs/*
 !configs/path.example.json
 !config.json.cluster.example
 !config.json.optimizer.example
+!auth.json.example
 
 # Virtualenv folders
 bin/
@@ -140,3 +143,6 @@ pip-selfcheck.json
 
 # Some love for the vim users
 .*.sw*
+
+# Mac Gargage
+.DS_Store

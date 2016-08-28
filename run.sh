@@ -1,21 +1,30 @@
 #!/usr/bin/env bash
 pokebotpath=$(cd "$(dirname "$0")"; pwd)
-filename=""
+auth=""
+config=""
 if [ ! -z $1 ]; then
-filename=$1
+auth=$1
 else
-filename="./configs/config.json"
+auth="./configs/auth.json"
+fi
+if [ ! -z $2 ]; then
+config=$2
+else
+config="./configs/config.json"
 fi
 cd $pokebotpath
 
 sleep 2
-if [ ! -f "$filename" ]; then
-echo "There's no "$filename" file. Please use ./setup.sh -c to creat one."
+if [ ! -f "$auth" ]; then
+echo "There's no auth file. Please use ./setup.sh -a to create one"
+fi
+if [ ! -f "$config" ]; then
+echo "There's no config file. Please use ./setup.sh -c to create one."
 fi
 while true
 do
-python pokecli.py -cf $filename
-echo `date`" Pokebot "$*" Stopped." 
+python pokecli.py -af $auth -cf $config
+echo `date`" Pokebot "$*" Stopped."
 read -p "Press any button or wait 20 seconds to continue.
 " -r -s -n1 -t 20
 done
