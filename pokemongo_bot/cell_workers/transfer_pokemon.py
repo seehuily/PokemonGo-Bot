@@ -36,7 +36,7 @@ class TransferPokemon(Datastore, BaseTask):
             self._release_pokemon_worst_in_group(group, 'all')
 
     def _should_work(self):
-        random_number = randrange (0,20,1) 
+        random_number = randrange (0,20,1)
         return inventory.Pokemons.get_space_left() <= self.min_free_slot - random_number
 
     def _release_pokemon_get_groups(self):
@@ -135,7 +135,7 @@ class TransferPokemon(Datastore, BaseTask):
 
                 for pokemon in transfer_pokemons:
                     self.release_pokemon(pokemon)
-                    self.bot.remove_from_new_pokemon_list(pokemon)
+                    self.bot.remove_from_new_pokemon_list('t', pokemon)
 
                     # Display new pokemon list
                     new_pokemon_groups = self.bot.get_new_pokemon()

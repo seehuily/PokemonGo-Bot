@@ -1036,18 +1036,18 @@ class PokemonGoBot(Datastore):
     def get_new_pokemon(self):
         return self.new_pokemon_list
 
-    def add_to_new_pokemon_list(self, pokemon):
+    def add_to_new_pokemon_list(self, act, pokemon):
         self.new_pokemon_list.append(pokemon)
 
-        npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M") + '|{:0<4} {:x}{:x}{:x} C({} {}\n'.format(
-                pokemon.iv, pokemon.iv_attack, pokemon.iv_defense, pokemon.iv_stamina, Pokemons.name_for(pokemon.pokemon_id), pokemon.cp)
+        npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M") + '|{:0<4} {:x}{:x}{:x} {}({} {}\n'.format(
+                pokemon.iv, pokemon.iv_attack, pokemon.iv_defense, pokemon.iv_stamina, act, Pokemons.name_for(pokemon.pokemon_id), pokemon.cp)
         try:
             with open(self.caught_log_file, 'a') as outfile:
                 outfile.write(npkm_msg)
         except IOError as e:
             self.logger.info('[x] Error while opening caught file: %s' % e)
 
-    def remove_from_new_pokemon_list(self, pokemon):
+    def remove_from_new_pokemon_list(self, act, pokemon):
         for gpokemon in self.new_pokemon_list:
             if pokemon.pokemon_id != gpokemon.pokemon_id:
                 continue
@@ -1062,8 +1062,8 @@ class PokemonGoBot(Datastore):
 
             # Not a save delete, if we have two identical (pokemon_id, cp, A,D,S) entries, only one will be deleted.
             self.new_pokemon_list.remove(gpokemon)
-            npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M") + '|{:0<4} {:x}{:x}{:x} R({} {}\n'.format(
-                    gpokemon.iv, gpokemon.iv_attack, gpokemon.iv_defense, gpokemon.iv_stamina, Pokemons.name_for(gpokemon.pokemon_id), gpokemon.cp)
+            npkm_msg = datetime.datetime.now().strftime("%m-%d %H:%M") + '|{:0<4} {:x}{:x}{:x} {}({} {}\n'.format(
+                    gpokemon.iv, gpokemon.iv_attack, gpokemon.iv_defense, gpokemon.iv_stamina, act, Pokemons.name_for(gpokemon.pokemon_id), gpokemon.cp)
             try:
                 with open(self.caught_log_file, 'a') as outfile:
                     outfile.write(npkm_msg)

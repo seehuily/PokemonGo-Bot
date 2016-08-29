@@ -136,12 +136,12 @@ class EvolvePokemon(Datastore, BaseTask):
                     'xp': xp,
                 }
             )
-            self.bot.remove_from_new_pokemon_list(pokemon)
+            self.bot.remove_from_new_pokemon_list('r', pokemon)
 
             inventory.pokemons().remove(pokemon.unique_id)
             new_pokemon = inventory.Pokemon(evolution)
             inventory.pokemons().add(new_pokemon)
-            self.bot.add_to_new_pokemon_list(new_pokemon)
+            self.bot.add_to_new_pokemon_list('e', new_pokemon)
 
             sleep(uniform(self.min_evolve_speed, self.max_evolve_speed))
             evolve_result = True

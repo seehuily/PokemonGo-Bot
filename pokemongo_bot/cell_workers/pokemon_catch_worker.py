@@ -562,7 +562,7 @@ class PokemonCatchWorker(Datastore, BaseTask):
                 self.bot.metrics.captured_pokemon(pokemon.name, pokemon.cp, pokemon.iv_display, pokemon.iv)
 
                 # Add caught pokemon to new_pokemon_list for display
-                self.bot.add_to_new_pokemon_list(pokemon)
+                self.bot.add_to_new_pokemon_list('c', pokemon)
 
                 try:
                     inventory.pokemons().add(pokemon)
