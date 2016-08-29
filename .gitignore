@@ -116,6 +116,7 @@ data/deviceid-*.txt
 data/client_id
 data/mqtt_client_id
 user_web_catchable
+version
 
 # Multiple config
 configs/*
