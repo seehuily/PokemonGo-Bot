@@ -55,6 +55,7 @@ class ColoredLoggingHandler(EventHandler):
         'pokemon_nickname_invalid':          'red',
         'pokemon_not_in_range':              'yellow',
         'pokemon_release':                   'white',
+        'pokemon_upgraded':                  'green',
         'pokemon_vanished':                  'red',
         'pokestop_empty':                    'yellow',
         'pokestop_log':                      'magenta',

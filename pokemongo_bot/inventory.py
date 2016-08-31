@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 from collections import OrderedDict
 
 from pokemongo_bot.base_dir import _base_dir
@@ -14,6 +15,7 @@ https://drive.google.com/file/d/0B0TeYGBPiuzaenhUNE5UWnRCVlU/view
 https://www.reddit.com/r/pokemongodev/comments/4w7mdg/combat_damage_calculation_formula_exactly/
 '''
 
+
 class FileIOException(Exception):
     pass
 
@@ -22,8 +24,9 @@ class FileIOException(Exception):
 # Abstraction
 
 class _StaticInventoryComponent(object):
-    STATIC_DATA_FILE = None  # optionally load static data from file,
-                             # dropping the data in a static variable named STATIC_DATA
+    # optionally load static data from file,
+    # dropping the data in a static variable named STATIC_DATA
+    STATIC_DATA_FILE = None
     STATIC_DATA = None
 
     def __init__(self):
@@ -80,6 +83,71 @@ class _BaseInventoryComponent(_StaticInventoryComponent):
 
 #
 # Inventory Components
+class Player(_BaseInventoryComponent):
+    TYPE = 'player_stats'
+
+    def __init__(self, bot, ttl=3):
+        self.bot = bot
+        self._exp = None
+        self._level = None
+        self.ttl = ttl
+        self.next_level_xp = None
+        self.pokemons_captured = None
+        self.poke_stop_visits = None
+        self.last_lvl_up_reward = time.time()  # ts of last lvl_up_reward api call
+        self.player_stats = None
+        super(_BaseInventoryComponent, self).__init__()
+
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, value):
+        if self._level != value:
+            now = time.time()
+            if now - self.last_lvl_up_reward > self.ttl:
+                self.bot.api.level_up_rewards(level=self.level)
+
+        self._level = value
+
+    @property
+    def exp(self):
+        return self._exp
+
+    @exp.setter
+    def exp(self, value):
+        if self._exp != value:
+            now = time.time()
+            if now - self.last_lvl_up_reward > self.ttl:
+                self.bot.api.level_up_rewards(level=self.level)
+
+        self._exp = value
+
+    def refresh(self,inventory):
+        self.player_stats = self.retrieve_data(inventory)
+
+    def parse(self, item):
+        if not item:
+            item = {}
+
+        self.exp = item.get('experience', 0)
+        self.level = item.get('level', 0)
+        self.next_level_xp = item.get('next_level_xp', 0)
+        self.pokemons_captured = item.get('pokemons_captured', 0)
+        self.poke_stop_visits = item.get('poke_stop_visits', 0)
+
+    def retrieve_data(self, inventory):
+        ret = {}
+        for item in inventory:
+            data = item['inventory_item_data']
+            if self.TYPE in data:
+                item = data[self.TYPE]
+                ret = item
+                self.parse(item)
+
+        return ret
+
 
 class Candies(_BaseInventoryComponent):
     TYPE = 'candy'
@@ -626,6 +694,7 @@ class PokemonInfo(object):
     """
     Static information about pokemon kind
     """
+
     def __init__(self, data):
         self._data = data
         self.id = int(data["Number"])
@@ -1108,62 +1177,53 @@ class Inventory(object):
         self.candy = Candies()
         self.items = Items()
         self.pokemons = Pokemons()
+        self.player = Player(self.bot)  # include inventory inside Player?
+        self.egg_incubators = None
         self.refresh()
         self.item_inventory_size = None
         self.pokemon_inventory_size = None
 
-    def refresh(self):
-        inventory = self.bot.api.get_inventory()
+    def refresh(self, inventory=None):
+        if inventory is None:
+            inventory = self.bot.api.get_inventory()
+
         inventory = inventory['responses']['GET_INVENTORY']['inventory_delta']['inventory_items']
-        for i in (self.pokedex, self.candy, self.items, self.pokemons):
+        for i in (self.pokedex, self.candy, self.items, self.pokemons, self.player):
             i.refresh(inventory)
+
+        self.egg_incubators = [x["inventory_item_data"] for x in inventory if "egg_incubators" in x["inventory_item_data"]]
 
         self.update_web_inventory()
 
-
     def init_inventory_outfile(self):
         web_inventory = os.path.join(_base_dir, "web", "inventory-%s.json" % self.bot.config.username)
+        web_inventory_gd = os.path.join(self.bot.gd_web_path, "web", "inventory-%s.json" % self.bot.config.username)
 
         if not os.path.exists(web_inventory):
             self.bot.logger.info('No inventory file %s found. Creating a new one' % web_inventory)
 
             json_inventory = []
-        
+
             with open(web_inventory, "w") as outfile:
                 json.dump(json_inventory, outfile)
+            with open(web_inventory_gd, "w") as outfile2:
+                json.dump(json_inventory, outfile2)
 
-    
     def update_web_inventory(self):
         web_inventory = os.path.join(_base_dir, "web", "inventory-%s.json" % self.bot.config.username)
         web_inventory_gd = os.path.join(self.bot.gd_web_path, "web", "inventory-%s.json" % self.bot.config.username)
 
         if not os.path.exists(web_inventory):
             self.init_inventory_outfile()
-            
-        try:
-            with open(web_inventory, "r") as infile:
-                json_inventory = json.load(infile)
-        except (IOError, ValueError):
-            # Unable to read json from web inventory
-            # File may be corrupt. Create a new one.            
-            self.bot.logger.info('[x] Error while opening inventory file for read: %s' % e, 'red')
-            json_inventory = []
-        except:
-            raise FileIOException("Unexpected error reading from {}".web_inventory)
 
-        json_inventory = [x for x in json_inventory if not x.get("inventory_item_data", {}).get("pokedex_entry", None)]
-        json_inventory = [x for x in json_inventory if not x.get("inventory_item_data", {}).get("candy", None)]
-        json_inventory = [x for x in json_inventory if not x.get("inventory_item_data", {}).get("item", None)]
-        json_inventory = [x for x in json_inventory if not x.get("inventory_item_data", {}).get("pokemon_data", None)]
-
-        json_inventory = json_inventory + self.jsonify_inventory()
+        json_inventory = self.jsonify_inventory()
 
         try:
             with open(web_inventory, "w") as outfile:
                 json.dump(json_inventory, outfile)
             with open(web_inventory_gd, "w") as outfile2:
                 json.dump(json_inventory, outfile2)
-        except (IOError, ValueError):
+        except (IOError, ValueError) as e:
             self.bot.logger.info('[x] Error while opening inventory file for write: %s' % e, 'red')
             pass
         except:
@@ -1171,6 +1231,8 @@ class Inventory(object):
 
     def jsonify_inventory(self):
         json_inventory = []
+
+        json_inventory.append({"inventory_item_data": {"player_stats": self.player.player_stats}})
 
         for pokedex in self.pokedex.all():
             json_inventory.append({"inventory_item_data": {"pokedex_entry": pokedex}})
@@ -1181,8 +1243,11 @@ class Inventory(object):
         for item_id, item in self.items._data.items():
             json_inventory.append({"inventory_item_data": {"item": {"item_id": item_id, "count": item.count}}})
 
-        for pokemon in self.pokemons.all():
+        for pokemon in self.pokemons.all_with_eggs():
             json_inventory.append({"inventory_item_data": {"pokemon_data": pokemon._data}})
+
+        for inc in self.egg_incubators:
+            json_inventory.append({"inventory_item_data": inc})
 
         return json_inventory
 
@@ -1276,16 +1341,27 @@ def init_inventory(bot):
     _inventory = Inventory(bot)
 
 
-def refresh_inventory():
+def refresh_inventory(data=None):
     """
     Refreshes the cached inventory, retrieves data from the server.
     :return: Nothing.
     :rtype: None
     """
-    _inventory.refresh()
+    try:
+        _inventory.refresh(data)
+    except AttributeError:
+        print '_inventory was not initialized'
+
+def jsonify_inventory():
+    try:
+        return _inventory.jsonify_inventory()
+    except AttributeError:
+        print '_inventory was not initialized'
+        return []
 
 def update_web_inventory():
     _inventory.update_web_inventory()
+
 
 def get_item_inventory_size():
     """
@@ -1296,6 +1372,7 @@ def get_item_inventory_size():
     _inventory.retrieve_inventories_size()
     return _inventory.item_inventory_size
 
+
 def get_pokemon_inventory_size():
     """
     Access to the Item inventory size.
@@ -1305,6 +1382,7 @@ def get_pokemon_inventory_size():
     _inventory.retrieve_inventories_size()
     return _inventory.pokemon_inventory_size
 
+
 def pokedex():
     """
 
@@ -1313,6 +1391,10 @@ def pokedex():
     """
     # Are new pokemons added to the pokedex ?
     return _inventory.pokedex
+
+
+def player():
+    return _inventory.player
 
 
 def candies():

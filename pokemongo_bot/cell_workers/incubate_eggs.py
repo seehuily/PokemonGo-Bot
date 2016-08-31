@@ -80,7 +80,7 @@ class IncubateEggs(BaseTask):
             for egg in available_eggs:
                 if egg["used"] or egg["km"] == -1:
                     continue
-                
+
                 self.emit_event(
                     'incubate_try',
                     level='debug',
@@ -124,24 +124,17 @@ class IncubateEggs(BaseTask):
                         egg["used"] = True
 
     def _check_inventory(self, lookup_ids=[]):
-        inv = {}
-        response_dict = self.bot.api.get_inventory()
+        if lookup_ids:
+            inventory.refresh_inventory()
         matched_pokemon = []
         temp_eggs = []
         temp_used_incubators = []
         temp_ready_breakable_incubators = []
         temp_ready_infinite_incubators = []
-        inv = reduce(
-            dict.__getitem__,
-            ["responses", "GET_INVENTORY", "inventory_delta", "inventory_items"],
-            response_dict
-        )
+        inv = inventory.jsonify_inventory()
         for inv_data in inv:
             inv_data = inv_data.get("inventory_item_data", {})
             if "egg_incubators" in inv_data:
-                temp_used_incubators = []
-                temp_ready_breakable_incubators = []
-                temp_ready_infinite_incubators = []
                 incubators = inv_data.get("egg_incubators", {}).get("egg_incubator",[])
                 if isinstance(incubators, basestring):  # checking for old response
                     incubators = [incubators]
@@ -219,8 +212,8 @@ class IncubateEggs(BaseTask):
                 else:
                     pokemon['name'] = "error"
         except:
-            pokemon_data = [{"name":"error","cp":"error","iv":"error"}]
-        if not pokemon_ids or pokemon_data[0]['name'] == "error":
+            pokemon_data = [{"name":"error", "cp":"error", "iv":"error"}]
+        if not pokemon_ids or not pokemon_data or pokemon_data[0]['name'] == "error":
             self.emit_event(
                 'egg_hatched',
                 data={
