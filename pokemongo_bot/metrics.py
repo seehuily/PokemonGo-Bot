@@ -1,6 +1,7 @@
 import time
 from datetime import timedelta
-
+from pokemongo_bot.inventory import Pokemons, refresh_inventory
+from pokemongo_bot import inventory
 
 class Metrics(object):
 
@@ -20,8 +21,12 @@ class Metrics(object):
         self.releases = 0
         self.highest_cp = {'cp': 0, 'desc': ''}
         self.most_perfect = {'potential': 0, 'desc': ''}
-
         self.eggs = {'hatched': 0, 'next_hatching_km': 0}
+
+        self.uniq_pokemons_caught = None
+        self.uniq_pokemons_list = None
+
+        self.player_stats = []
 
     def runtime(self):
         return timedelta(seconds=round(time.time() - self.start_time))
@@ -43,6 +48,10 @@ class Metrics(object):
 
     def num_captures(self):
         return self.captures['latest'] - self.captures['start']
+
+    def uniq_caught(self):
+        # generate pokemon string 'Snorlax, Pikachu' from list of ids
+        return ', '.join([Pokemons.name_for(pok_id) for pok_id in self.uniq_pokemons_caught]) if self.uniq_pokemons_caught else ''
 
     def captures_per_hour(self):
         """
@@ -90,17 +99,28 @@ class Metrics(object):
         self.releases += count
 
     def capture_stats(self):
-        request = self.bot.api.create_request()
-        request.get_inventory()
+        try:
+            request = self.bot.api.create_request()
+        except AttributeError:
+            return
+
         request.get_player()
         response_dict = request.call()
+
         try:
+            uniq_pokemon_list = set()
+
             self.dust['latest'] = response_dict['responses']['GET_PLAYER']['player_data']['currencies'][1]['amount']
-            if self.dust['start'] < 0: self.dust['start'] = self.dust['latest']
-            for item in response_dict['responses']['GET_INVENTORY']['inventory_delta']['inventory_items']:
+            if self.dust['start'] < 0:
+                self.dust['start'] = self.dust['latest']
+
+            inventory.refresh_inventory()
+            json_inventory = inventory.jsonify_inventory()
+            for item in json_inventory:
                 if 'inventory_item_data' in item:
                     if 'player_stats' in item['inventory_item_data']:
                         playerdata = item['inventory_item_data']['player_stats']
+                        self.player_stats = playerdata
 
                         self.xp['latest'] = playerdata.get('experience', 0)
                         if self.xp['start'] < 0: self.xp['start'] = self.xp['latest']
@@ -128,6 +148,16 @@ class Metrics(object):
 
                         self.evolutions['latest'] = playerdata.get('evolutions', 0)
                         if self.evolutions['start'] < 0: self.evolutions['start'] = self.evolutions['latest']
+                    elif 'pokedex_entry' in item['inventory_item_data']:
+                        entry = item['inventory_item_data']['pokedex_entry'].get('pokemon_id')
+                        if entry: uniq_pokemon_list.add(entry)
+
+            if not self.uniq_pokemons_list:  # make set from pokedex entries on first run
+                self.uniq_pokemons_list = uniq_pokemon_list
+            else:
+                # generate new entries for current bot session
+                self.uniq_pokemons_caught = uniq_pokemon_list - self.uniq_pokemons_list
+
         except KeyError:
             # Nothing we can do if there's no player info.
             return

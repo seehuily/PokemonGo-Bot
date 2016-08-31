@@ -1,26 +1,25 @@
 {
-    "auth_service": "google",
-    "username": "YOUR_USERNAME",
-    "password": "YOUR_PASSWORD",
-    "location": "SOME_LOCATION",
-    "gmapkey": "GOOGLE_MAPS_API_KEY",
-    "encrypt_location": "",
     "websocket_server": false,
     "heartbeat_threshold": 10,
     "enable_social": true,
+    "live_config_update": {
+      "enabled": false,
+      "tasks_only": false
+    },
     "tasks": [
       {
-        "type": "HandleSoftBan"
-      },
-      {
-        "type": "SleepSchedule",
+        "//NOTE: This task MUST be placed on the top of task list": {},
+        "type": "RandomAlivePause",
         "config": {
           "enabled": false,
-          "time": "22:54",
-          "duration":"7:46",
-          "time_random_offset": "00:24",
-          "duration_random_offset": "00:43"
+          "min_duration": "00:00:10",
+          "max_duration": "00:10:00",
+          "min_interval": "00:05:00",
+          "max_interval": "01:30:00"
         }
+      },
+      {
+        "type": "HandleSoftBan"
       },
       {
         "type": "CompleteTutorial",
@@ -31,13 +30,18 @@
         }
       },
       {
-         "type": "CollectLevelUpReward"
+        "type": "CollectLevelUpReward",
+        "config": {
+          "collect_reward": true,
+          "level_limit": -1
+        }
       },
       {
         "type": "IncubateEggs",
         "config": {
           "enabled": true,
-          "longer_eggs_first": true,
+          "infinite_longer_eggs_first": false,
+          "breakable_longer_eggs_first": true,
           "min_interval": 120
         }
       },
@@ -61,6 +65,16 @@
         }
       },
       {
+        "type": "ShowBestPokemon",
+        "config": {
+          "enabled": true,
+          "min_interval": 60,
+          "amount": 5,
+          "order_by": "cp",
+          "info_to_show": ["cp", "ivcp", "dps", "hp"]
+        }
+      },
+      {
         "type": "TransferPokemon",
         "config": {
           "enabled": true,
@@ -81,7 +95,18 @@
         "type": "EvolvePokemon",
         "config": {
             "enabled": false,
-            "evolve_all": "none",
+            
+            "// evolve only pidgey and drowzee": "",
+            "// evolve_list": "pidgey, drowzee",
+            "// donot_evolve_list": "none",
+            
+            "// evolve all but pidgey and drowzee": "",
+            "// evolve_list": "all",
+            "// donot_evolve_list": "pidgey, drowzee",
+            
+            "evolve_list": "all",
+            "donot_evolve_list": "none",
+            
             "first_evolve_by": "cp",
             "evolve_above_cp": 500,
             "evolve_above_iv": 0.8,
@@ -109,7 +134,10 @@
             "Razz Berry":     { "keep" : 100 }
           },
           "recycle_wait_min": 1,
-          "recycle_wait_max": 4
+          "recycle_wait_max": 4,
+          "recycle_force": true,
+          "recycle_force_min": "00:01:00",
+          "recycle_force_max": "00:05:00"
         }
       },
       {
@@ -121,6 +149,7 @@
           "min_ultraball_to_keep": 5,
           "berry_threshold": 0.35,
           "vip_berry_threshold": 0.9,
+          "daily_catch_limit": 800,
           "catch_throw_parameters": {
             "excellent_rate": 0.1,
             "great_rate": 0.5,
@@ -136,7 +165,9 @@
             "berry_wait_min": 2,
             "berry_wait_max": 3,
             "changeball_wait_min": 2,
-            "changeball_wait_max": 3
+            "changeball_wait_max": 3,
+            "newtodex_wait_min": 20, 
+            "newtodex_wait_max": 30
           }
         }
       },
@@ -148,12 +179,20 @@
           "spin_wait_max": 5
         }
       },
+      { "type": "UpdateWebInventory",
+        "config": {
+          "enabled": true
+        }
+      },
       {
         "type": "MoveToMapPokemon",
         "config": {
           "enabled": true,
           "address": "http://localhost:5000",
-          "max_distance": 500,
+          "//NOTE: Change the max_sniping_distance to adjust the max sniping range (m)": {},
+          "max_sniping distance": 10000,
+          "//NOTE: Change the max_walking_distance to adjust the max walking range when snipe is off (m)": {},
+          "max__walking_distance": 500,
           "min_ball": 50,
           "prioritize_vips": true,
           "snipe": true,
@@ -164,6 +203,12 @@
           "map_path": "raw_data",
           "walker": "StepWalker",
           "max_extra_dist_fort": 10,
+          "skip_rounds": 5,
+	  "update_map_min_distance_meters": 500,
+	  "update_map_min_time_sec": 120,
+	  "snipe_sleep_sec": 2,
+	  "snipe_max_in_chain": 2,
+	  "debug": false,
           "catch": {
             "==========Legendaries==========": 0,
             "Aerodactyl": 1000,
@@ -400,7 +445,8 @@
         "config": {
             "enabled": true,
             "lure_attraction": true,
-            "lure_max_distance": 2000
+            "lure_max_distance": 2000,
+            "log_interval": 5
         }
       },
       {
@@ -434,14 +480,35 @@
     "walk_min": 2.16,
     "alt_min": 500,
     "alt_max": 1000,
+    "sleep_schedule": [
+      {
+        "time": "12:00",
+        "duration": "5:30",
+        "time_random_offset": "00:30",
+        "duration_random_offset": "00:30",
+        "wake_up_at_location": ""
+      },
+      {
+        "time": "17:45",
+        "duration": "3:00",
+        "time_random_offset": "01:00",
+        "duration_random_offset": "00:30",
+        "wake_up_at_location": ""
+      }
+    ],
     "debug": false,
     "test": false,
+    "walker_limit_output": false,
     "health_record": true,
     "location_cache": true,
     "distance_unit": "km",
     "reconnecting_timeout": 15,
-    "logging_color": true,
-    "daily_catch_limit": 800,
+    "logging": {
+      "color": true,
+      "show_datetime": true,
+      "show_process_name": true,
+      "show_log_level": true
+    },
     "catch": {
       "any": {"catch_above_cp": 0, "catch_above_iv": 0, "logic": "or"},
       "// Example of always catching Rattata:": {},
@@ -463,7 +530,7 @@
       "// Zubat": {"keep_best_cp": 2, "keep_best_iv": 3}
     },
     "vips" : {
-         "Any pokemon put here directly force to use Berry & Best Ball to capture, to secure the capture rate!": {},
+         "Any pokemon put here directly force to use Berry & Best Ball to capture, to secure the capture rate": {},
         "any": {"catch_above_cp": 1200, "catch_above_iv": 0.9, "logic": "or" },
         "Lapras": {},
         "Moltres": {},
@@ -484,5 +551,9 @@
         "Weezing": {},
         "Flareon": {}
 
-    }
+    },
+	"websocket": {
+		"start_embedded_server": true,
+		"server_url": "127.0.0.1:4000"
+	}
 }
