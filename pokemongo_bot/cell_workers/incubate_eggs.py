@@ -244,6 +244,8 @@ class IncubateEggs(BaseTask):
                     'candy': candy[i],
                 }
             )
+            # hatching egg gets exp too!
+            inventory.player().exp += xp[i]
 
             self.bot.add_to_new_pokemon_list('i', Pokemon(pokemon_data[i]))
 

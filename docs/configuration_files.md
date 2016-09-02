@@ -47,6 +47,7 @@
 - [Egg Incubator](#egg-incubator)
 - [ShowBestPokemon](#showbestpokemon)
 - [Telegram Task](#telegram-task)
+- [CompleteTutorial](#completetutorial)
 
 #Configuration files
 
@@ -96,6 +97,7 @@ Document the configuration options of PokemonGo-Bot.
 'logging'.'show_datetime' (default true) Show date and time in log
 'logging'.'show_process_name' (default true) Show name of process generating output in log
 'logging'.'show_log_level' (default true) Show level of log message in log (eg. "INFO")
+'logging'.'show_thread_name' (default false) Show name of thread in log
 
 ## Configuring Tasks
 [[back to top](#table-of-contents)]
@@ -606,7 +608,7 @@ This task will fetch current pokemon spawns from /raw_data of an PokemonGo-Map i
 [[back to top](#table-of-contents)]
 
 * `Address` - Address of the webserver of PokemonGo-Map. ex: `http://localhost:5000`
-* `Mode` - Which mode to run snipin on
+* `Mode` - Which mode to run sniping on
    - `distance` - Will move to the nearest pokemon
    - `priority` - Will move to the pokemon with the highest priority assigned (tie breaking by distance)
 * `prioritize_vips` - Will prioritize vips in distance and priority mode above all normal pokemon if set to true
@@ -622,8 +624,14 @@ This task will fetch current pokemon spawns from /raw_data of an PokemonGo-Map i
 * `snipe_high_prio_only` - Whether to snipe pokemon above a certain threshold.
 * `snipe_high_prio_threshold` - The threshold number corresponding with the `catch` dictionary.
 *   - Any pokemon above this threshold value will be caught by teleporting to its location, and getting back to original location if `snipe` is `True`.
-*   - Any pokemon under this threshold value will make the bot walk to the Pokemon target wether `snipe` is `True` or `False`.
+*   - Any pokemon under this threshold value will make the bot walk to the Pokemon target whether `snipe` is `True` or `False`.
 *   `max_extra_dist_fort` : Percentage of extra distance allowed to move to a fort on the way to the targeted Pokemon
+*   `debug` : Output additional debugging information
+*   `skip_rounds` : Try to snipe every X rounds
+*   `update_map_min_distance_meters` : Update map if more than X meters away
+*   `update_map_min_time_sec` : Update map if older than X seconds
+*   `snipe_sleep_sec` : Sleep for X seconds after snipes
+*   `snipe_max_in_chain` : Maximum snipes in chain
 
 #### Example
 [[back to top](#table-of-contents)]
@@ -1008,5 +1016,48 @@ Bot answer on command '/info' self stats.
           "Snorlax": {"operator": "or", "cp": 900, "iv": 0.9}
         }
     }
+}
+```
+
+## CompleteTutorial
+[[back to top](#table-of-contents)]
+
+### Description
+[[back to top](#table-of-contents)]
+
+Completes the tutorial:
+
+* Legal screen
+* Avatar selection
+* First Pokemon capture
+* Set nickname
+* Firte time experience
+* Pick team at level 5
+
+
+### Options
+[[back to top](#table-of-contents)]
+
+* `nickname` : Nickname to be used ingame.
+* `team` : `Default: 0`. Team to pick after reaching level 5.
+
+Available `team` :
+```
+0: Neutral (No team)
+1: Blue (Mystic)
+2: Red (Valor)
+3: Yellow (Instinct)
+```
+
+### Sample configuration
+[[back to top](#table-of-contents)]
+```json
+{
+	"type": "CompleteTutorial",
+	"config": {
+	"enabled": true,
+		"nickname": "PokemonGoF",
+		"team": 2
+	}
 }
 ```

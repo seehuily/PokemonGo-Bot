@@ -17,11 +17,12 @@ class TelegramClass:
 
     update_id = None
 
-    def __init__(self, bot, master, pokemons):
+    def __init__(self, bot, master, pokemons, config):
         self.bot = bot
         self.master = master
         self.pokemons = pokemons
         self._tbot = None
+        self.config = config
 
     def sendMessage(self, chat_id=None, parse_mode='Markdown', text=None):
         self._tbot.sendMessage(chat_id=chat_id, parse_mode=parse_mode, text=text)
@@ -44,10 +45,30 @@ class TelegramClass:
         except:
             raise FileIOException("Unexpected error reading from {}".format(web_inventory))
         return next((x["inventory_item_data"]["player_stats"]
-                for x in json_inventory
-                if x.get("inventory_item_data", {}).get("player_stats", {})),
-            None)
-
+                     for x in json_inventory
+                     if x.get("inventory_item_data", {}).get("player_stats", {})),
+                    None)
+    def send_player_stats_to_chat(self, chat_id):
+        stats = self._get_player_stats()
+        if stats:
+            with self.bot.database as conn:
+                cur = conn.cursor()
+                cur.execute("SELECT DISTINCT COUNT(encounter_id) FROM catch_log WHERE dated >= datetime('now','-1 day')")
+                catch_day = cur.fetchone()[0]
+                cur.execute("SELECT DISTINCT COUNT(pokestop) FROM pokestop_log WHERE dated >= datetime('now','-1 day')")
+                ps_day = cur.fetchone()[0]
+                res = (
+                    "*"+self.bot.config.username+"*",
+                    "_Level:_ "+str(stats["level"]),
+                    "_XP:_ "+str(stats["experience"])+"/"+str(stats["next_level_xp"]),
+                    "_Pokemons Captured:_ "+str(stats["pokemons_captured"])+" ("+str(catch_day)+" _last 24h_)",
+                    "_Poke Stop Visits:_ "+str(stats["poke_stop_visits"])+" ("+str(ps_day)+" _last 24h_)",
+                    "_KM Walked:_ "+str("%.2f" % stats["km_walked"])
+                )
+            self._tbot.sendMessage(chat_id=chat_id, parse_mode='Markdown', text="\n".join(res))
+            self._tbot.send_location(chat_id=chat_id, latitude=self.bot.api._position_lat, longitude=self.bot.api._position_lng)
+        else:
+            self._tbot.sendMessage(chat_id=chat_id, parse_mode='Markdown', text="Stats not loaded yet\n")
     def run(self):
         time.sleep(1)
         while True:
@@ -58,27 +79,18 @@ class TelegramClass:
                         self.bot.logger.info("message from {} ({}): {}".format(update.message.from_user.username, update.message.from_user.id, update.message.text))
                         if self.master and self.master not in [update.message.from_user.id, "@{}".format(update.message.from_user.username)]:
                             continue
+                        if not re.match(r'^[0-9]+$', self.master):
+                            # the "master" is not numeric, set self.master to update.message.chat_id and re-instantiate the handler
+                            newconfig = self.config
+                            newconfig['master'] = update.message.chat_id
+                            # remove old handler
+                            self.bot.event_manager._handlers = filter(lambda x: not isinstance(x, TelegramHandler), self.bot.event_manager._handlers)
+                            # add new handler (passing newconfig as parameter)
+                            self.bot.event_manager.add_handler(TelegramHandler(self.bot, newconfig))
+
+
                         if update.message.text == "/info":
-                            stats = self._get_player_stats()
-                            if stats:
-                                with self.bot.database as conn:
-                                    cur = conn.cursor()
-                                    cur.execute("SELECT DISTINCT COUNT(encounter_id) FROM catch_log WHERE dated >= datetime('now','-1 day')")
-                                    catch_day = cur.fetchone()[0]
-                                    cur.execute("SELECT DISTINCT COUNT(pokestop) FROM pokestop_log WHERE dated >= datetime('now','-1 day')")
-                                    ps_day = cur.fetchone()[0]
-                                    res = (
-                                        "*"+self.bot.config.username+"*",
-                                        "_Level:_ "+str(stats["level"]),
-                                        "_XP:_ "+str(stats["experience"])+"/"+str(stats["next_level_xp"]),
-                                        "_Pokemons Captured:_ "+str(stats["pokemons_captured"])+" ("+str(catch_day)+" _last 24h_)",
-                                        "_Poke Stop Visits:_ "+str(stats["poke_stop_visits"])+" ("+str(ps_day)+" _last 24h_)",
-                                        "_KM Walked:_ "+str("%.2f" % stats["km_walked"])
-                                    )
-                                self._tbot.sendMessage(chat_id=update.message.chat_id, parse_mode='Markdown', text="\n".join(res))
-                                self._tbot.send_location(chat_id=update.message.chat_id, latitude=self.bot.api._position_lat, longitude=self.bot.api._position_lng)
-                            else:
-                                self._tbot.sendMessage(chat_id=update.message.chat_id, parse_mode='Markdown', text="Stats not loaded yet\n")
+                            self.send_player_stats_to_chat(update.message.chat_id)
                         elif update.message.text == "/start" or update.message.text == "/help":
                             res = (
                                 "Commands: ",
@@ -97,11 +109,12 @@ class TelegramHandler(EventHandler):
         self.master = config.get('master', None)
         self.pokemons = config.get('alert_catch', {})
         self.whoami = "TelegramHandler"
+        self.config = config
 
     def handle_event(self, event, sender, level, formatted_msg, data):
         if self.tbot is None:
             try:
-                self.tbot = TelegramClass(self.bot, self.master, self.pokemons)
+                self.tbot = TelegramClass(self.bot, self.master, self.pokemons, self.config)
                 self.tbot.connect()
                 thread.start_new_thread(self.tbot.run)
             except Exception as inst:
@@ -130,8 +143,9 @@ class TelegramHandler(EventHandler):
                         msg = "Caught {} CP: {}, IV: {}".format(data["pokemon"], data["cp"], data["iv"])
                     else:
                         return
+            elif event == 'catch_limit':
+                self.tbot.send_player_stats_to_chat(master)
+                msg = "*You have reached your daily catch limit, quitting.*"
             else:
                 return
             self.tbot.sendMessage(chat_id=master, parse_mode='Markdown', text=msg)
-
-
