@@ -26,7 +26,9 @@
         "config": {
           "enabled": false,
           "// set a name": "",
-          "nickname": ""
+          "nickname": "",
+          "// 0 = No Team, 1 = Blue, 2 = Red, 3 = Yellow": "",
+          "team": 0
         }
       },
       {
@@ -88,7 +90,9 @@
         "config": {
           "enabled": false,
           "nickname_above_iv": 0.9,
-          "nickname_template": "{iv_pct}_{iv_ads}"
+          "nickname_template": "{iv_pct}_{iv_ads}",
+          "nickname_wait_min": 3,
+          "nickname_wait_max": 5
         }
       },
       {
