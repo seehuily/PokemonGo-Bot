@@ -411,6 +411,10 @@ class Pokemons(_BaseInventoryComponent):
         # makes caller's lives more difficult)
         return [p for p in super(Pokemons, self).all() if not isinstance(p, Egg)]
 
+    def count_for(self, pokemon_id):
+        pokemon_list = [p for p in super(Pokemons, self).all() if not isinstance(p, Egg) and p.pokemon_id == pokemon_id]
+        return len(pokemon_list)
+
     def all_with_eggs(self):
         # count pokemon AND eggs, since eggs are counted as bag space
         return super(Pokemons, self).all()

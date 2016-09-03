@@ -22,6 +22,7 @@ class EvolvePokemon(Datastore, BaseTask):
         self.first_evolve_by = self.config.get('first_evolve_by', 'cp')
         self.evolve_above_cp = self.config.get('evolve_above_cp', 500)
         self.evolve_above_iv = self.config.get('evolve_above_iv', 0.8)
+        self.min_keep_num = self.config.get('min_keep_num', 0)
         self.cp_iv_logic = self.config.get('logic', 'or')
         self.use_lucky_egg = self.config.get('use_lucky_egg', False)
         self._validate_config()
@@ -29,7 +30,7 @@ class EvolvePokemon(Datastore, BaseTask):
     def _validate_config(self):
         if isinstance(self.evolve_list, basestring):
             self.evolve_list = [str(pokemon_name).strip().lower() for pokemon_name in self.evolve_list.split(',')]
-            
+
         if isinstance(self.donot_evolve_list, basestring):
             self.donot_evolve_list = [str(pokemon_name).strip().lower() for pokemon_name in self.donot_evolve_list.split(',')]
 
@@ -53,6 +54,8 @@ class EvolvePokemon(Datastore, BaseTask):
 
         cache = {}
         for pokemon in filtered_list:
+            if inventory.pokemons().count_for(pokemon.pokemon_id) <= self.min_keep_num:
+                continue
             if pokemon.can_evolve_now():
                 self._execute_pokemon_evolve(pokemon, cache)
 
