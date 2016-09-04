@@ -415,6 +415,30 @@ class Pokemons(_BaseInventoryComponent):
         pokemon_list = [p for p in super(Pokemons, self).all() if not isinstance(p, Egg) and p.pokemon_id == pokemon_id]
         return len(pokemon_list)
 
+    def min_iv_for(self, pokemon_id):
+        pokemon_list = [p for p in super(Pokemons, self).all() if not isinstance(p, Egg) and p.pokemon_id == pokemon_id]
+        if len(pokemon_list) > 0:
+            pokemon_list.sort(key=lambda x: x.iv)
+            return pokemon_list[0].iv
+        else:
+            return 0
+
+    def min_cp_for(self, pokemon_id):
+        pokemon_list = [p for p in super(Pokemons, self).all() if not isinstance(p, Egg) and p.pokemon_id == pokemon_id]
+        if len(pokemon_list) > 0:
+            pokemon_list.sort(key=lambda x: x.cp)
+            return pokemon_list[0].cp
+        else:
+            return 0
+
+    def min_ncp_for(self, pokemon_id):
+        pokemon_list = [p for p in super(Pokemons, self).all() if not isinstance(p, Egg) and p.pokemon_id == pokemon_id]
+        if len(pokemon_list) > 0:
+            pokemon_list.sort(key=lambda x: x.ncp)
+            return pokemon_list[0].ncp
+        else:
+            return 0
+
     def all_with_eggs(self):
         # count pokemon AND eggs, since eggs are counted as bag space
         return super(Pokemons, self).all()

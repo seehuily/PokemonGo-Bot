@@ -117,10 +117,11 @@ class PokemonCatchWorker(Datastore, BaseTask):
         ignore_reason_msg = ''
 
         # skip ignored pokemon
-        if not self._should_catch_pokemon(pokemon):
+        should_catch_pokemon, config_ncp, config_cp, config_iv = self._should_catch_pokemon(pokemon)
+        if not should_catch_pokemon:
             ignore_pokemon = 1
             ignore_by_config = 1
-            ignore_reason_msg = ', but ignored by config'
+            ignore_reason_msg = ', but ignored by config(NCP:{},CP:{},IV:{})'.format(config_ncp, config_cp, config_iv)
         else:
             is_vip = self._is_vip_pokemon(pokemon)
             if inventory.items().get(ITEM_POKEBALL).count < 1:
@@ -247,7 +248,7 @@ class PokemonCatchWorker(Datastore, BaseTask):
         pokemon_config = config.get(pokemon.name, config.get('any'))
 
         if not pokemon_config:
-            return False
+            return False, -1, -1, -1
 
         catch_results = {
             'ncp': False,
@@ -268,41 +269,50 @@ class PokemonCatchWorker(Datastore, BaseTask):
                     'threshold': threshold
                 }
             )
-            return False
+            return False, threshold, -1, -1
 
         if pokemon_config.get('never_catch', False):
-            return False
+            return False, -1, -1, -1
 
         if pokemon_config.get('always_catch', False):
-            return True
+            return True, 0, 0, 0
 
         catch_ncp = pokemon_config.get('catch_above_ncp', 0.8)
-        if pokemon.cp_percent > catch_ncp:
+        if catch_ncp == -1:
+            catch_ncp = inventory.pokemons().min_ncp_for(pokemon.pokemon_id)
+        if pokemon.cp_percent >= catch_ncp:
             catch_results['ncp'] = True
 
         catch_cp = pokemon_config.get('catch_above_cp', 1200)
-        if pokemon.cp > catch_cp:
+        if catch_cp == -1:
+            catch_cp = inventory.pokemons().min_cp_for(pokemon.pokemon_id)
+        if pokemon.cp >= catch_cp:
             catch_results['cp'] = True
 
         catch_iv = pokemon_config.get('catch_above_iv', 0.8)
-        if pokemon.iv > catch_iv:
+        if catch_iv == -1:
+            catch_iv = inventory.pokemons().min_iv_for(pokemon.pokemon_id)
+        if pokemon.iv >= catch_iv:
             catch_results['iv'] = True
 
         # check if encountered pokemon is our locked pokemon
         if self.bot.capture_locked and self.bot.capture_locked != pokemon.pokemon_id:
-            return False
+            return False, -1, -1, -1
 
-        return LOGIC_TO_FUNCTION[pokemon_config.get('logic', default_logic)](*catch_results.values())
+        return LOGIC_TO_FUNCTION[pokemon_config.get('logic', default_logic)](*catch_results.values()), catch_ncp, catch_cp, catch_iv
 
     def _should_catch_pokemon(self, pokemon):
-        return self._pokemon_matches_config(self.bot.config.catch, pokemon) or self._is_vip_pokemon(pokemon)
+        is_match_catch_config, ncp, cp, iv = self._pokemon_matches_config(self.bot.config.catch, pokemon)
+        is_vip_pokemon = self._is_vip_pokemon(pokemon)
+        return is_match_catch_config or is_vip_pokemon, ncp, cp, iv
 
     def _is_vip_pokemon(self, pokemon):
         # having just a name present in the list makes them vip
         # Not seen pokemons also will become vip if it's not disabled in config
         if self.bot.config.vips.get(pokemon.name) == {} or (self.treat_unseen_as_vip and not self.pokedex.seen(pokemon.pokemon_id)):
             return True
-        return self._pokemon_matches_config(self.bot.config.vips, pokemon, default_logic='or')
+        is_match_vip_config, ncp, cp, iv = self._pokemon_matches_config(self.bot.config.vips, pokemon, default_logic='or')
+        return is_match_vip_config
 
     def _pct(self, rate_by_ball):
         return '{0:.2f}'.format(rate_by_ball * 100)
@@ -568,7 +578,7 @@ class PokemonCatchWorker(Datastore, BaseTask):
 
                 try:
                     inventory.pokemons().add(pokemon)
-                    exp_gain = sum(response_dict['responses']['CATCH_POKEMON']['capture_award']['xp'])  
+                    exp_gain = sum(response_dict['responses']['CATCH_POKEMON']['capture_award']['xp'])
                     # update player's exp
                     inventory.player().exp += exp_gain
 
