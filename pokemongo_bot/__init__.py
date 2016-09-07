@@ -97,6 +97,8 @@ class PokemonGoBot(Datastore):
         self.alt = self.config.gps_default_altitude
         self.new_pokemon_list = []
         self.ignore_eid_list = [None] * config.forts_max_circle_size
+        self.bot_zone = config.bot_zone
+        self.zone_radius = config.zone_radius
 
         # Make our own copy of the workers for this instance
         self.workers = []
@@ -761,6 +763,7 @@ class PokemonGoBot(Datastore):
         if self.fort_position is None:
             self.fort_position = self.start_position
         # alt is unused atm but makes using *location easier
+        zone_radius = self.zone_radius
         try:
             with open(user_web_location, 'w') as outfile:
                 json.dump({
@@ -771,6 +774,7 @@ class PokemonGoBot(Datastore):
                     'fort_lat':self.fort_position[0],
                     'fort_lng':self.fort_position[1],
                     'alt': alt,
+                    'zone_radius': zone_radius,
                     'cells': cells
                 }, outfile)
             with open(user_web_location_gd, 'w') as outfile2:
@@ -782,6 +786,7 @@ class PokemonGoBot(Datastore):
                     'fort_lat':self.fort_position[0],
                     'fort_lng':self.fort_position[1],
                     'alt': alt,
+                    'zone_radius': zone_radius,
                     'cells': cells
                 }, outfile2)
         except IOError as e:

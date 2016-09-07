@@ -641,6 +641,22 @@ def init_config():
         default=8.0
     )
     add_config(
+        parser,
+        load,
+        long_flag="--bot_zone",
+        help="Keep bot in a certain zone (default=False)",
+        type=bool,
+        default=False
+    )
+    add_config(
+        parser,
+        load,
+        long_flag="--zone_radius",
+        help="bot zone radius (default=1000)",
+        type=int,
+        default=1000
+    )
+    add_config(
          parser,
          load,
          long_flag="--enable_social",

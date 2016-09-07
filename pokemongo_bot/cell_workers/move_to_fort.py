@@ -20,8 +20,8 @@ class MoveToFort(BaseTask):
         self.lure_max_distance = self.config.get("lure_max_distance", 2000)
         self.ignore_item_count = self.config.get("ignore_item_count", False)
         self.walker = self.config.get('walker', 'StepWalker')
-        self.bot_zone = self.config.get("bot_zone", False)
-        self.zone_radius = self.config.get("zone_radius", 1000)
+        self.bot_zone = self.bot.bot_zone
+        self.zone_radius = self.bot.zone_radius
         self.recent_dest_fort = None
         self.recent_dest_fortname = 'Unknown'
 
