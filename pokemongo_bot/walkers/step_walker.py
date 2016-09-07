@@ -10,7 +10,7 @@ from geopy import Point
 
 class StepWalker(object):
 
-    def __init__(self, bot, dest_lat, dest_lng, dest_alt=None, fixed_speed=None, precision=50):
+    def __init__(self, bot, dest_lat, dest_lng, dest_alt=None, fixed_speed=None, precision=1000):
         self.bot = bot
         self.api = bot.api
         self.precision = precision
@@ -23,12 +23,12 @@ class StepWalker(object):
             dest_lat,
             dest_lng
         )
-        
+
         if dest_alt == None:
             self.alt = uniform(self.bot.config.alt_min, self.bot.config.alt_max)
         else:
             self.alt = dest_alt
-            
+
         if fixed_speed != None:
             # PolylineWalker uses a fixed speed!
             self.speed = fixed_speed
@@ -54,7 +54,7 @@ class StepWalker(object):
         else:
             self.dLat = (dest_lat - self.initLat) / int(self.steps)
             self.dLng = (dest_lng - self.initLng) / int(self.steps)
-            
+
         self.bearing = self._calc_bearing(self.initLat, self.initLng, self.destLat, self.destLng)
 
     def step(self):
@@ -103,43 +103,43 @@ class StepWalker(object):
     def _calc_bearing(self, start_lat, start_lng, dest_lat, dest_lng):
         """
         Calculates the bearing between two points.
-    
+
         The formulae used is the following:
             θ = atan2(sin(Δlong).cos(lat2),
                       cos(lat1).sin(lat2) − sin(lat1).cos(lat2).cos(Δlong))
-    
+
         :Parameters:
           - `start_lat in decimal degrees
           - `start_lng in decimal degrees
           - `dest_lat in decimal degrees
           - `dest_lng in decimal degrees
-    
+
         :Returns:
           The bearing in degrees
-    
+
         :Returns Type:
           float
         """
-    
+
         lat1 = math.radians(start_lat)
         lat2 = math.radians(dest_lat)
-    
+
         diffLong = math.radians(dest_lng - start_lng)
-    
+
         x = math.sin(diffLong) * math.cos(lat2)
         y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1)
                 * math.cos(lat2) * math.cos(diffLong))
-    
+
         initial_bearing = math.atan2(x, y)
-    
+
         # Now we have the initial bearing but math.atan2 return values
         # from -180° to + 180° which is not what we want for a compass bearing
         # The solution is to normalize the initial bearing as shown below
         initial_bearing = math.degrees(initial_bearing)
         compass_bearing = (initial_bearing + 360) % 360
-    
+
         return compass_bearing
-        
+
     def _get_next_pos(self, lat, lon, bearing, speed, precision):
         origin = Point(lat, lon)
         if speed == 0.0:
