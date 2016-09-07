@@ -223,6 +223,8 @@ class IncubateEggs(BaseTask):
                     'candy': candy[i]
                 }
             )
+            self.bot.add_to_new_pokemon_list('i', pokemon)
+
             # hatching egg gets exp too!
             inventory.player().exp += xp[i]
             self.bot.stardust += stardust[i]
@@ -246,8 +248,6 @@ class IncubateEggs(BaseTask):
             
         self.bot.metrics.hatched_eggs(len(pokemon_list))
         return True
-
-            self.bot.add_to_new_pokemon_list('i', Pokemon(pokemon_data[i]))
 
     def _print_eggs(self):
         if not self.used_incubators:
