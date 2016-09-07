@@ -24,6 +24,7 @@ class MoveToFort(BaseTask):
         self.zone_radius = self.bot.zone_radius
         self.recent_dest_fort = None
         self.recent_dest_fortname = 'Unknown'
+        self.wait_at_fort = self.config.get('wait_on_lure', False)
 
     def should_run(self):
         has_space_for_loot = inventory.Items.has_space_for_loot()
@@ -134,6 +135,17 @@ class MoveToFort(BaseTask):
 
             if not step_walker.step():
                 return WorkerResult.RUNNING
+        else:
+            if nearest_fort.get('active_fort_modifier') and self.wait_at_fort:
+                self.emit_event(
+                    'arrived_at_fort',
+                    formatted='Waiting near fort %s till Lure module expired' % fort_name
+                )
+            else:
+                self.emit_event(
+                    'arrived_at_fort',
+                    formatted='Arrived at fort.'
+                )
 
         self.emit_event(
             'arrived_at_fort',
@@ -194,8 +206,10 @@ class MoveToFort(BaseTask):
             return None, 0
 
         lures = filter(lambda x: True if x.get('lure_info', None) != None else False, forts)
+        if self.wait_at_fort:
+            lures = filter(lambda x: x.get('active_fort_modifier', False), forts)
 
-        if (len(lures)):
+        if len(lures):
             dist_lure_me = distance(self.bot.position[0], self.bot.position[1],
                                     lures[0]['latitude'],lures[0]['longitude'])
         else:
@@ -273,11 +287,17 @@ class MoveToFort(BaseTask):
         forts = self._remove_outzone_fort(forts)
 
         # Remove stops that are still on timeout
-        forts = filter(lambda x: x["id"] not in self.bot.fort_timeouts, forts)
+        forts = filter(
+            lambda x: x["id"] not in self.bot.fort_timeouts or (
+                x.get('active_fort_modifier', False) and self.wait_at_fort
+            ),
+            forts
+        )
+
         next_attracted_pts, lure_distance = self._get_nearest_fort_on_lure_way(forts)
 
         # Remove all forts which were spun in the last ticks to avoid circles if set
-        if self.bot.config.forts_avoid_circles:
+        if self.bot.config.forts_avoid_circles or not self.wait_at_fort:
             forts = filter(lambda x: x["id"] not in self.bot.recent_forts, forts)
 
         if (lure_distance > 0):
@@ -287,7 +307,7 @@ class MoveToFort(BaseTask):
 
         self.lure_distance = 0
 
-        if len(forts) > 0:
+        if len(forts):
             return forts[0]
         else:
             # All forts are out of range of start pos, retrieve the nearest
