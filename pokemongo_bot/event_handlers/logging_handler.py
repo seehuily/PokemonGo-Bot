@@ -76,6 +76,7 @@ class LoggingHandler(EventHandler):
         'vip_pokemon':                       'red',
         'use_incense':                       'blue',
         'vanish_limit_reached':              'red',
+        'move_to_map_pokemon_teleport_to':   'yellow',
 
         'arrived_at_cluster':                'none',
         'arrived_at_fort':                   'none',
@@ -137,8 +138,5 @@ class LoggingHandler(EventHandler):
             formatted_msg = '[{}] {}'.format(event, formatted_msg)
 
         logger = logging.getLogger(type(sender).__name__)
-        if sys.stdout.encoding is not None:
-            getattr(logger, level)(formatted_msg.encode(sys.stdout.encoding, "replace").decode("utf-8"))
-        else:
-            getattr(logger, level)(formatted_msg)
 
+        getattr(logger, level)(formatted_msg.encode(sys.stdout.encoding or sys.getdefaultencoding(), "replace").decode("utf-8", "replace"))

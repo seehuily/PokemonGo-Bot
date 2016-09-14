@@ -4,7 +4,6 @@ import os
 import time
 import json
 import logging
-import time
 import sys
 
 from random import random, randrange, uniform
@@ -25,6 +24,8 @@ CATCH_STATUS_MISSED = 4
 ENCOUNTER_STATUS_SUCCESS = 1
 ENCOUNTER_STATUS_NOT_IN_RANGE = 5
 ENCOUNTER_STATUS_POKEMON_INVENTORY_FULL = 7
+INCENSE_ENCOUNTER_AVAILABLE = 1
+INCENSE_ENCOUNTER_NOT_AVAILABLE = 2
 
 ITEM_POKEBALL = 1
 ITEM_GREATBALL = 2
@@ -105,9 +106,11 @@ class PokemonCatchWorker(BaseTask):
         try:
             responses = response_dict['responses']
             response = responses[self.response_key]
-            if response[self.response_status_key] != ENCOUNTER_STATUS_SUCCESS:
+            if response[self.response_status_key] != ENCOUNTER_STATUS_SUCCESS and response[self.response_status_key] != INCENSE_ENCOUNTER_AVAILABLE:
                 if response[self.response_status_key] == ENCOUNTER_STATUS_NOT_IN_RANGE:
                     self.emit_event('pokemon_not_in_range', formatted='Pokemon went out of range!')
+                elif response[self.response_status_key] == INCENSE_ENCOUNTER_NOT_AVAILABLE:
+                    self.emit_event('pokemon_not_in_range', formatted='Incensed Pokemon went out of range!')
                 elif response[self.response_status_key] == ENCOUNTER_STATUS_POKEMON_INVENTORY_FULL:
                     self.emit_event('pokemon_inventory_full', formatted='Your Pokemon inventory is full! Could not catch!')
                 return WorkerResult.ERROR
@@ -231,7 +234,7 @@ class PokemonCatchWorker(BaseTask):
                 player_latitude=player_latitude,
                 player_longitude=player_longitude
             )
-        else:
+        elif 'fort_id' in self.pokemon:
             fort_id = self.pokemon['fort_id']
             self.spawn_point_guid = fort_id
             self.response_key = 'DISK_ENCOUNTER'
@@ -241,6 +244,14 @@ class PokemonCatchWorker(BaseTask):
                 fort_id=fort_id,
                 player_latitude=player_latitude,
                 player_longitude=player_longitude
+            )
+        else:
+            # This must be a incensed mon
+            self.response_key = 'INCENSE_ENCOUNTER'
+            self.response_status_key = 'result'
+            request.incense_encounter(
+                encounter_id=encounter_id,
+                encounter_location=self.pokemon['encounter_location']
             )
         return request.call()
 
@@ -568,7 +579,7 @@ class PokemonCatchWorker(BaseTask):
 
                 self.emit_event(
                     'pokemon_vanished',
-                    formatted='{pokemon} vanished!',
+                    formatted='{} vanished!'.format(pokemon.name),
                     data={
                         'pokemon': pokemon.name,
                         'encounter_id': self.pokemon['encounter_id'],
