@@ -121,6 +121,7 @@ class PokemonGoBot(object):
         self.hb_locked = False # lock hb on snip
 
         self.gd_web_path = 'C:\\Users\\Michael\\Google Drive\pkm'
+        self.gd_web_path2 = 'D:\\code\\github\\pkm_web'
         self.caught_log_file = os.path.join(self.gd_web_path, '', 'caught-%s.txt' % self.config.username)
         self.capture_locked = False  # lock catching while moving to VIP pokemon
 
@@ -769,6 +770,11 @@ class PokemonGoBot(object):
             location = self.position[0:2]
             cells = self.find_close_cells(*location)
 
+        if self.fort_position is None:
+            self.fort_position = self.start_position
+        # alt is unused atm but makes using *location easier
+        zone_radius = self.zone_radius
+
         user_data_cells = os.path.join(_base_dir, 'data', 'cells-%s.json' % self.config.username)
         try:
             with open(user_data_cells, 'w') as outfile:
@@ -776,44 +782,30 @@ class PokemonGoBot(object):
         except IOError as e:
             self.logger.info('[x] Error while opening location file: %s' % e)
 
-        user_web_location = os.path.join(
-            _base_dir, 'web', 'location-%s.json' % self.config.username
-        )
-        user_web_location_gd = os.path.join(
-            self.gd_web_path, 'web', 'location-%s.json' % self.config.username
-        )
+        web_paths = [[_base_dir, 'web'],
+                     [self.gd_web_path, 'web'],
+                     [self.gd_web_path2, '']]
 
-        if self.fort_position is None:
-            self.fort_position = self.start_position
-        # alt is unused atm but makes using *location easier
-        zone_radius = self.zone_radius
-        try:
-            with open(user_web_location, 'w') as outfile:
-                json.dump({
-                    'lat': lat,
-                    'lng': lng,
-                    'start_lat':self.start_position[0],
-                    'start_lng':self.start_position[1],
-                    'fort_lat':self.fort_position[0],
-                    'fort_lng':self.fort_position[1],
-                    'alt': alt,
-                    'zone_radius': zone_radius,
-                    'cells': cells
-                }, outfile)
-            with open(user_web_location_gd, 'w') as outfile2:
-                json.dump({
-                    'lat': lat,
-                    'lng': lng,
-                    'start_lat':self.start_position[0],
-                    'start_lng':self.start_position[1],
-                    'fort_lat':self.fort_position[0],
-                    'fort_lng':self.fort_position[1],
-                    'alt': alt,
-                    'zone_radius': zone_radius,
-                    'cells': cells
-                }, outfile2)
-        except IOError as e:
-            self.logger.info('[x] Error while opening location file: %s' % e)
+        for web_path in web_paths:
+            user_web_location = os.path.join(
+                web_path[0], web_path[1], 'location-%s.json' % self.config.username
+            )
+
+            try:
+                with open(user_web_location, 'w') as outfile:
+                    json.dump({
+                        'lat': lat,
+                        'lng': lng,
+                        'start_lat':self.start_position[0],
+                        'start_lng':self.start_position[1],
+                        'fort_lat':self.fort_position[0],
+                        'fort_lng':self.fort_position[1],
+                        'alt': alt,
+                        'zone_radius': zone_radius,
+                        'cells': cells
+                    }, outfile)
+            except IOError as e:
+                self.logger.info('[x] Error while opening location file: %s' % e)
 
         user_data_lastlocation = os.path.join(
             _base_dir, 'data', 'last-location-%s.json' % self.config.username

@@ -162,8 +162,6 @@ class PokemonCatchWorker(BaseTask):
         if ignore_pokemon == 1:
             return WorkerResult.IGNORE
 
-        user_web_catchable = os.path.join(_base_dir, 'web', 'catchable-{}.json'.format(self.bot.config.username))
-        user_web_catchable_gd = os.path.join(self.bot.gd_web_path, 'web', 'catchable-{}.json'.format(self.bot.config.username))
         cur_lat, cur_lng = self.bot.position[0:2]
         cur_lng = pokemon_data.get('longitude', cur_lng)
         cur_lat = pokemon_data.get('latitude', cur_lat)
@@ -171,18 +169,18 @@ class PokemonCatchWorker(BaseTask):
         spawn_point_id = int(random() * 99925893070)
         spawn_point_id = pokemon_data.get('spawn_point_id', spawn_point_id)
 
-        try:
-            with open(user_web_catchable, 'w') as outfile:
-                json.dump({'pokemon_id': pokemon_id, 'longitude': cur_lng, 'latitude': cur_lat, 'spawn_point_id': spawn_point_id}, outfile)
-        except IOError as e:
-            errstr = '[x] Error while opening location file: catchable-.json'
+        web_paths = [[_base_dir, 'web'],
+                     [self.bot.gd_web_path, 'web'],
+                     [self.bot.gd_web_path2, '']]
 
-        try:
-            with open(user_web_catchable_gd, 'w') as outfile2:
-                json.dump({'pokemon_id': pokemon_id, 'longitude': cur_lng, 'latitude': cur_lat, 'spawn_point_id': spawn_point_id}, outfile2)
-        except IOError as e:
-            errstr = '[x] Error while opening location file: catchable-.json'
+        for web_path in web_paths:
+            user_web_catchable = os.path.join(web_path[0], web_path[1], 'catchable-{}.json'.format(self.bot.config.username))
 
+            try:
+                with open(user_web_catchable, 'w') as outfile:
+                    json.dump({'pokemon_id': pokemon_id, 'longitude': cur_lng, 'latitude': cur_lat, 'spawn_point_id': spawn_point_id}, outfile)
+            except IOError as e:
+                errstr = '[x] Error while opening location file: catchable-.json'
 
         # simulate app
         time.sleep(3)
