@@ -316,7 +316,7 @@ class PokemonCatchWorker(BaseTask):
             catch_cp = inventory.pokemons().min_cp_for(pokemon.pokemon_id)
         if pokemon.cp <= catch_cp:
             catch_results['cp'] = True
-            
+
         catch_iv = pokemon_config.get('catch_above_iv', 0.8)
         if catch_iv == -1:
             catch_iv = inventory.pokemons().min_iv_for(pokemon.pokemon_id)
@@ -348,13 +348,13 @@ class PokemonCatchWorker(BaseTask):
             cr['cp'] = True
         elif catch_logic == 'orand':
             cr['cp'] = True,
-            cr['iv'] = True    
-        
-        if pokemon_config.get('catch_above_ncp',-1) >= 0: cr['ncp'] = catch_results['ncp']
-        if pokemon_config.get('catch_above_cp',-1) >= 0: cr['cp'] = catch_results['cp']
-        if pokemon_config.get('catch_below_cp',-1) >= 0: cr['cp'] = catch_results['cp']
-        if pokemon_config.get('catch_above_iv',-1) >= 0: cr['iv'] = catch_results['iv']
-        
+            cr['iv'] = True
+
+        if pokemon_config.get('catch_above_ncp',-1) >= -1: cr['ncp'] = catch_results['ncp']
+        if pokemon_config.get('catch_above_cp',-1) >= -1: cr['cp'] = catch_results['cp']
+        if pokemon_config.get('catch_below_cp',-1) >= -1: cr['cp'] = catch_results['cp']
+        if pokemon_config.get('catch_above_iv',-1) >= -1: cr['iv'] = catch_results['iv']
+
         if DEBUG_ON:
             print "Debug information for match rules..."
             print "catch_results ncp = {}".format(catch_results['ncp'])
@@ -374,7 +374,7 @@ class PokemonCatchWorker(BaseTask):
         if LOGIC_TO_FUNCTION[catch_logic](*cr.values()):
             return catch_results['fa'] and catch_results['ca'], catch_ncp, catch_cp, catch_iv
         else:
-            return False, -1, -1, -1
+            return False, catch_ncp, catch_cp, catch_iv
 
     def _should_catch_pokemon(self, pokemon):
         is_match_catch_config, ncp, cp, iv = self._pokemon_matches_config(self.bot.config.catch, pokemon)
