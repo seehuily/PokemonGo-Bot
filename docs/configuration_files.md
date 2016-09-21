@@ -32,6 +32,10 @@
     - [Description](#description)
     - [Options](#options)
         - [Example](#example)
+- [Sniping _(Sniper)_](#sniping-_-sniper-_)
+    - [Description](#description)
+    - [Options](#options)
+        - [Example](#example)
 - [FollowPath Settings](#followpath-settings)
     - [Description](#description)
     - [Options](#options)
@@ -50,6 +54,7 @@
 - [Telegram Task](#telegram-task)
 - [Discord Task](#discord-task)
 - [CompleteTutorial](#completetutorial)
+- [BuddyPokemon](#buddypokemon)
 
 #Configuration files
 
@@ -720,6 +725,103 @@ This task will fetch current pokemon spawns from /raw_data of an PokemonGo-Map i
 }
 ```
 
+## Sniping _(Sniper)_
+[[back to top](#table-of-contents)]
+
+### Description
+[[back to top](#table-of-contents)]
+
+This task is an upgrade version of the MoveToMapPokemon task. It will fetch pokemon informations from any number of urls (sources), including PokemonGo-Map, or from the social feature. You can also use the old PokemonGo-Map project. For information on how to properly setup PokemonGo-Map have a look at the Github page of the project [here](https://github.com/PokemonGoMap/PokemonGo-Map). You can also use [this](https://github.com/YvesHenri/PogoLocationFeeder), which is an adapted version of the application that NecroBot used to snipe. There is an example config in `config/config.json.map.example`.
+
+### Options
+[[back to top](#table-of-contents)]
+
+* `mode` - The mode on which the sniper will fetch the informations. (default: social)
+   - `social` - Information will come from the social network.
+   - `url` - Information will come from one or multiple urls.
+* `bullets` - Each bullet corresponds to an attempt of catching a pokemon. (default: 1)
+* `homing_shots` - This will ensure that each bullet will catch a target. (default: true)
+* `special_iv` - This will skip the catch list if the value is greater than the target's IV. This currently does not work with `social` mode and only works if the given `url` has this information. (default: 100)
+* `time_mask` - The time mask used (if `expiration.format` is a full date). The default mask is '%Y-%m-%d %H:%M:%S'.
+* `order` - The order on which you want to snipe. This can be one or multiple of the following values (default: [`missing`, `vip`, `threshold`]):
+   - `iv` - Order by IV, if any. See `min_iv_to_ignore_catch_list`.
+   - `vip` - Order by VIP.
+   - `missing` - Order by the target's pokedex missing status.
+   - `threshold` - Order by the threshold you have specified in the `catch` list.
+   - `expiration_timestamp_ms` - Order by the expiration time.
+* `sources` - This should map a JSON param values from a given url. For example: different urls will provide different JSON response formats. If a param does not exist, you DO NOT have to specify it! Map bellow their corresponding values:
+   - `iv` - The JSON param that corresponds to the pokemon IV. Only certain sources provide this info. NOTE: social does not provide this info!
+   - `id` - The JSON param that corresponds to the pokemon ID. (required)
+   - `name` - The JSON param that corresponds to the pokemon name. (required)
+   - `latitude` - The JSON param that corresponds to the latitude. It will work if a single param is used for both `latitude` and `longitude`, eg.: "coords": "1.2345, 6.7890" (required)
+   - `longitude` - The JSON param that corresponds to the longitude. It will work if a single param is used for both `latitude` and `longitude`, eg.: "coords": "1.2345, 6.7890" (required)
+   - `encounter` - The JSON param that corresponds to encounter ID. This value is very unlikely to be provided by third-party urls. However, it is safely updated internally.
+   - `spawnpoint` - The JSON param that corresponds to spawnpoint ID. This value is very unlikely to be provided by third-party urls. However, it is safely updated internally.
+   - `expiration` - The JSON param that correspond to the pokemon expiration time.
+   - `expiration.format` - The time type. It can be either seconds, milliseconds or utc
+* `catch` - A dictionary of pokemon to catch with an assigned priority (higher => better).
+
+#### Example
+[[back to top](#table-of-contents)]
+
+```
+{
+    "type": "Sniper",
+    "config": {
+        "enabled": true,
+        "mode": "url",
+        "bullets": 1,
+        "homing_shots": true,
+        "special_iv": 100,
+        "order": ["missing", "iv", "priority", "vip"],
+        "sources": [
+            {
+                "url": "http://pokesnipers.com/api/v1/pokemon.json",
+                "key": "results",
+                "mappings": {
+                    "iv": { "param": "iv" },
+                    "name": { "param": "name" },
+                    "latitude": { "param": "coords" },
+                    "longitude": { "param": "coords" },
+                    "expiration": { "param": "until", "format": "utc" }
+                }
+            },
+            {
+                "url": "http://localhost:5000/raw_data",
+                "key": "pokemons",
+                "mappings": {
+                    "iv": { "param": "iv" },
+                    "id": { "param": "pokemon_id" },
+                    "name": { "param": "pokemon_name" },
+                    "latitude": { "param": "latitude" },
+                    "longitude": { "param": "longitude" },
+                    "expiration": { "param": "disappear_time", "format": "milliseconds" }
+                }
+            }
+        ],
+        "catch": {
+            "Snorlax": 1000,
+            "Dragonite": 1000,
+            "Growlithe": 600,
+            "Clefairy": 500,
+            "Kabuto": 500,
+            "Dratini": 500,
+            "Dragonair": 500,
+            "Mr. Mime": 500,
+            "Magmar": 500,
+            "Electabuzz": 500,
+            "Tangela": 500,
+            "Tauros": 500,
+            "Primeape": 500,
+            "Chansey": 500,
+            "Pidgey": 100,
+            "Caterpie": 100,
+            "Weedle": 100
+        }
+    }
+  }
+```
+
 ## FollowPath Settings
 [[back to top](#table-of-contents)]
 
@@ -1115,11 +1217,53 @@ Available `team` :
 [[back to top](#table-of-contents)]
 ```json
 {
-	"type": "CompleteTutorial",
-	"config": {
-	"enabled": true,
-		"nickname": "PokemonGoF",
-		"team": 2
-	}
+  "type": "CompleteTutorial",
+  "config": {
+  "enabled": true,
+    "nickname": "PokemonGoF",
+    "team": 2
+  }
+}
+```
+
+## BuddyPokemon
+[[back to top](#table-of-contents)]
+
+### Description
+[[back to top](#table-of-contents)]
+
+Makes use of the Pokemon Buddy system.
+It's able to switch the buddy automatically given an list of pokemon that should be using this feature.
+Periodically logs the status of the buddy walking.
+After setting a buddy it's not possible to remove it, only change it. So if a buddy is already selected and no buddy list is given, it will still run with the buddy already selected.
+
+### Options
+[[back to top](#table-of-contents)]
+
+* `buddy_list`: `Default: []`. List of pokemon names that will be used as buddy. If '[]' or 'none', will not use or change buddy.
+* `best_in_family`: `Default: True`. If True, picks best Pokemon in the family (sorted by cp).
+* `candy_limit`: `Default: 0`. Set the candy limit to be rewarded per buddy, when reaching this limit the bot will change the buddy to the next in the list. When candy_limit = 0 or only one buddy in list, it has no limit and never changes buddy.
+* `force_first_change`: `Default: False`. If True, will try to change buddy at bot start according to the buddy list. If False, will use the buddy already set until candy_limit is reached and then use the buddy list.
+* `buddy_change_wait_min`: `Default: 3`. Minimum time (in seconds) that the buddy change takes.
+* `buddy_change_wait_max`: `Default: 5`. Maximum time (in seconds) that the buddy change takes.
+* `min_interval`: `Default: 120`. Time (in seconds) to periodically log the buddy walk status.
+
+### Sample configuration
+[[back to top](#table-of-contents)]
+```json
+{
+  "type": "BuddyPokemon",
+    "config": {
+      "enabled": true,
+        "buddy_list": "dratini, magikarp",
+        "best_in_family": true,
+        "// candy_limit = 0 means no limit, so it will never change current buddy": {},
+        "candy_limit": 0,
+        "// force_first_change = true will always change buddy at start removing current one": {},
+        "force_first_change": false,
+        "buddy_change_wait_min": 3,
+        "buddy_change_wait_max": 5,
+        "min_interval": 120
+  }
 }
 ```

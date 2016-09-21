@@ -109,15 +109,19 @@ class MoveToMapPokemon(BaseTask):
         now = int(time.time())
 
         for pokemon in pokemon_list:
-            disappear = int(pokemon.get('expiration_timestamp_ms', 0) / 1000) or int(pokemon.get('disappear_time', 0) / 1000)
+            try:
+                disappear = int(pokemon.get('expiration_timestamp_ms', 0) / 1000) or int(pokemon.get('disappear_time', 0) / 1000)
 
-            pokemon['encounter_id'] = pokemon.get('encounter_id', '')
-            pokemon['spawn_point_id'] = pokemon.get('spawn_point_id', '') or pokemon.get('spawnpoint_id', '')
-            pokemon['iv'] = pokemon.get('iv', 0)
-            pokemon['disappear_time'] = disappear
-            pokemon['name'] = self.pokemon_data[pokemon['pokemon_id'] - 1]['Name']
-            pokemon['is_vip'] = pokemon['name'] in self.bot.config.vips
-
+                pokemon['encounter_id'] = pokemon.get('encounter_id', '')
+                pokemon['spawn_point_id'] = pokemon.get('spawn_point_id', '') or pokemon.get('spawnpoint_id', '')
+                pokemon['iv'] = pokemon.get('iv', 0)
+                pokemon['disappear_time'] = disappear
+                pokemon['name'] = self.pokemon_data[pokemon['pokemon_id'] - 1]['Name']
+                pokemon['is_vip'] = pokemon['name'] in self.bot.config.vips
+            except TypeError:
+                continue
+            except KeyError:
+                continue
             if now > pokemon['disappear_time']:
                 continue
 
@@ -214,9 +218,9 @@ class MoveToMapPokemon(BaseTask):
         # Simulate kind of a lag after teleporting/moving to a long distance
         time.sleep(2)
 
-        # If social is enabled, trust it
-        exists = self.bot.config.enable_social
-        verify = not self.bot.config.enable_social
+        # If social is enabled and if no verification is needed, trust it. Otherwise, update IDs!
+        verify = not pokemon.get('encounter_id') or not pokemon.get('spawn_point_id')
+        exists = not verify and self.bot.config.enable_social
 
         # If social is disabled, we will have to make sure the target still exists
         if verify:
@@ -241,7 +245,7 @@ class MoveToMapPokemon(BaseTask):
                     exists = True
 
                     # Also, if the IDs arent valid, update them!
-                    if not pokemon['encounter_id'] or not pokemon['spawnpoint_id']:
+                    if not pokemon['encounter_id'] or not pokemon['spawn_point_id']:
                         pokemon['encounter_id'] = nearby_pokemon['encounter_id']
                         pokemon['spawn_point_id'] = nearby_pokemon['spawn_point_id']
                         pokemon['disappear_time'] = nearby_pokemon['last_modified_timestamp_ms'] if is_wild else nearby_pokemon['expiration_timestamp_ms']
