@@ -210,6 +210,14 @@
         }
       },
       {
+        "type": "CatchLimiter",
+        "config": {
+          "enabled": false,
+          "min_balls": 20,
+          "duration": 15
+        }
+      },
+      {
         "type": "MoveToMapPokemon",
         "config": {
           "enabled": true,
@@ -468,23 +476,50 @@
       {
 		"type": "Sniper",
 		"config": {
-			"enabled": true,
+			"enabled": false,
 			"mode": "social",
-			"bullets": 3,
+			"bullets": 1,
 			"homing_shots": true,
 			"special_iv": 100,
-			"order": ["missing", "iv", "priority", "vip", "expiration_timestamp_ms"],
+			"order": ["missing", "vip", "priority"],
 			"sources": [
 				{
+				    "enabled": false,
 					"url": "http://localhost:5000/raw_data",
 					"key": "pokemons",
+					"timeout": 3,
 					"mappings": {
-						"iv": { "param": "iv" },
 						"id": { "param": "pokemon_id" },
 						"name": { "param": "pokemon_name" },
 						"latitude": { "param": "latitude" },
 						"longitude": { "param": "longitude" },
 						"expiration": { "param": "disappear_time", "format": "milliseconds" }
+					}
+				},
+				{
+				    "enabled": false,
+					"url": "https://pokewatchers.com/grab/",
+					"timeout": 10,
+					"mappings": {
+						"iv": { "param": "iv" },
+						"id": { "param": "pid" },
+						"name": { "param": "pokemon" },
+						"latitude": { "param": "cords" },
+						"longitude": { "param": "cords" },
+						"expiration": { "param": "timeend", "format": "milliseconds" }
+					}
+				},
+				{
+				    "enabled": false,
+					"url": "http://pokesnipers.com/api/v1/pokemon.json",
+					"timeout": 10,
+					"key": "results",
+					"mappings": {
+						"iv": { "param": "iv" },
+						"name": { "param": "name" },
+						"latitude": { "param": "coords" },
+						"longitude": { "param": "coords" },
+						"expiration": { "param": "until", "format": "utc" }
 					}
 				}
 			],
