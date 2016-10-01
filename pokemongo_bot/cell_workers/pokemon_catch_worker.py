@@ -48,12 +48,12 @@ class PokemonCatchWorker(BaseTask):
     def __init__(self, pokemon, bot, config={}):
         self.pokemon = pokemon
 
-        # Load CatchPokemon config if no config supplied  
+        # Load CatchPokemon config if no config supplied
         if not config:
             for value in bot.workers:
                 if hasattr(value, 'catch_pokemon'):
                     config = value.config
-                    
+
         self.config = config
 
         super(PokemonCatchWorker, self).__init__(bot, config)
@@ -308,16 +308,16 @@ class PokemonCatchWorker(BaseTask):
         if pokemon.cp_percent >= catch_ncp:
             catch_results['ncp'] = True
 
-        catch_cp = pokemon_config.get('catch_above_cp', 1200)
-        if catch_cp == -1:
-            catch_cp = inventory.pokemons().min_cp_for(pokemon.pokemon_id)
-        if pokemon.cp >= catch_cp:
-            catch_results['cp'] = True
-
         catch_cp = pokemon_config.get('catch_below_cp', 0)
         if catch_cp == -1:
             catch_cp = inventory.pokemons().min_cp_for(pokemon.pokemon_id)
         if pokemon.cp <= catch_cp:
+            catch_results['cp'] = True
+
+        catch_cp = pokemon_config.get('catch_above_cp', 1200)
+        if catch_cp == -1:
+            catch_cp = inventory.pokemons().min_cp_for(pokemon.pokemon_id)
+        if pokemon.cp >= catch_cp:
             catch_results['cp'] = True
 
         catch_iv = pokemon_config.get('catch_above_iv', 0.8)
