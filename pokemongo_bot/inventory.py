@@ -1308,14 +1308,15 @@ class Inventory(object):
                      [self.bot.gd_web_path2, '']]
 
         for web_path in web_paths:
-            web_inventory = os.path.join(web_path[0], web_path[1], 'inventory-%s.json' % self.bot.config.username)
-            if not os.path.exists(web_inventory):
-                self.bot.logger.info('No inventory file %s found. Creating a new one' % web_inventory)
+            if web_path[0] !== '':
+                web_inventory = os.path.join(web_path[0], web_path[1], 'inventory-%s.json' % self.bot.config.username)
+                if not os.path.exists(web_inventory):
+                    self.bot.logger.info('No inventory file %s found. Creating a new one' % web_inventory)
 
-                json_inventory = []
+                    json_inventory = []
 
-                with open(web_inventory, "w") as outfile:
-                    json.dump(json_inventory, outfile)
+                    with open(web_inventory, "w") as outfile:
+                        json.dump(json_inventory, outfile)
 
     def update_web_inventory(self):
         web_paths = [[_base_dir, 'web'],
@@ -1323,19 +1324,20 @@ class Inventory(object):
                      [self.bot.gd_web_path2, '']]
 
         for web_path in web_paths:
-            web_inventory = os.path.join(web_path[0], web_path[1], 'inventory-%s.json' % self.bot.config.username)
-            if not os.path.exists(web_inventory):
-                self.init_inventory_outfile()
+            if web_path[0] !== '':
+                web_inventory = os.path.join(web_path[0], web_path[1], 'inventory-%s.json' % self.bot.config.username)
+                if not os.path.exists(web_inventory):
+                    self.init_inventory_outfile()
 
-            json_inventory = self.jsonify_inventory()
+                json_inventory = self.jsonify_inventory()
 
-            try:
-                with open(web_inventory, "w") as outfile:
-                    json.dump(json_inventory, outfile)
-            except (IOError, ValueError) as e:
-                self.bot.logger.info('[x] Error while opening inventory file for write: %s' % e, 'red')
-            except:
-                raise FileIOException("Unexpected error writing to {}".web_inventory)
+                try:
+                    with open(web_inventory, "w") as outfile:
+                        json.dump(json_inventory, outfile)
+                except (IOError, ValueError) as e:
+                    self.bot.logger.info('[x] Error while opening inventory file for write: %s' % e, 'red')
+                except:
+                    raise FileIOException("Unexpected error writing to {}".web_inventory)
 
     def jsonify_inventory(self):
         json_inventory = []

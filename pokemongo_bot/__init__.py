@@ -128,13 +128,13 @@ class PokemonGoBot(object):
         self.inventory_refresh_threshold = 10
         self.inventory_refresh_counter = 0
         self.last_inventory_refresh = time.time()
-        
+
         # Catch on/off
         self.catch_disabled = False
 
-        self.gd_web_path = 'C:\\Users\\Michael\\Google Drive\pkm'
-        self.gd_web_path2 = 'D:\\code\\github\\pkm_web'
-        self.caught_log_file = os.path.join(self.gd_web_path, '', 'caught-%s.txt' % self.config.username)
+        self.gd_web_path = ''
+        self.gd_web_path2 = ''
+        self.caught_log_file = os.path.join('C:\\Users\\Michael\\Google Drive\pkm', '', 'caught-%s.txt' % self.config.username)
         self.capture_locked = False  # lock catching while moving to VIP pokemon
 
         client_id_file_path = os.path.join(_base_dir, 'data', 'mqtt_client_id')
@@ -747,11 +747,11 @@ class PokemonGoBot(object):
         self.event_manager.register_event('sniper_log', parameters=('message', 'message'))
         self.event_manager.register_event('sniper_error', parameters=('message', 'message'))
         self.event_manager.register_event('sniper_teleporting', parameters=('latitude', 'longitude', 'name'))
-        
+
         # Catch-limiter
         self.event_manager.register_event('catch_limit_on')
         self.event_manager.register_event('catch_limit_off')
-        
+
 
     def tick(self):
         self.health_record.heartbeat()
@@ -870,25 +870,26 @@ class PokemonGoBot(object):
                      [self.gd_web_path2, '']]
 
         for web_path in web_paths:
-            user_web_location = os.path.join(
-                web_path[0], web_path[1], 'location-%s.json' % self.config.username
-            )
+            if web_path[0] !== '':
+                user_web_location = os.path.join(
+                    web_path[0], web_path[1], 'location-%s.json' % self.config.username
+                )
 
-            try:
-                with open(user_web_location, 'w') as outfile:
-                    json.dump({
-                        'lat': lat,
-                        'lng': lng,
-                        'start_lat':self.start_position[0],
-                        'start_lng':self.start_position[1],
-                        'fort_lat':self.fort_position[0],
-                        'fort_lng':self.fort_position[1],
-                        'alt': alt,
-                        'zone_radius': zone_radius,
-                        'cells': cells
-                    }, outfile)
-            except IOError as e:
-                self.logger.info('[x] Error while opening location file: %s' % e)
+                try:
+                    with open(user_web_location, 'w') as outfile:
+                        json.dump({
+                            'lat': lat,
+                            'lng': lng,
+                            'start_lat':self.start_position[0],
+                            'start_lng':self.start_position[1],
+                            'fort_lat':self.fort_position[0],
+                            'fort_lng':self.fort_position[1],
+                            'alt': alt,
+                            'zone_radius': zone_radius,
+                            'cells': cells
+                        }, outfile)
+                except IOError as e:
+                    self.logger.info('[x] Error while opening location file: %s' % e)
 
         user_data_lastlocation = os.path.join(
             _base_dir, 'data', 'last-location-%s.json' % self.config.username

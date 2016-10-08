@@ -192,13 +192,14 @@ class PokemonCatchWorker(BaseTask):
                      [self.bot.gd_web_path2, '']]
 
         for web_path in web_paths:
-            user_web_catchable = os.path.join(web_path[0], web_path[1], 'catchable-{}.json'.format(self.bot.config.username))
+            if web_path[0] !== '':
+                user_web_catchable = os.path.join(web_path[0], web_path[1], 'catchable-{}.json'.format(self.bot.config.username))
 
-            try:
-                with open(user_web_catchable, 'w') as outfile:
-                    json.dump({'pokemon_id': pokemon_id, 'longitude': cur_lng, 'latitude': cur_lat, 'spawn_point_id': spawn_point_id}, outfile)
-            except IOError as e:
-                errstr = '[x] Error while opening location file: catchable-.json'
+                try:
+                    with open(user_web_catchable, 'w') as outfile:
+                        json.dump({'pokemon_id': pokemon_id, 'longitude': cur_lng, 'latitude': cur_lat, 'spawn_point_id': spawn_point_id}, outfile)
+                except IOError as e:
+                    errstr = '[x] Error while opening location file: catchable-.json'
 
         # simulate app
         time.sleep(3)
