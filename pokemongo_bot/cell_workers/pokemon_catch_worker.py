@@ -192,7 +192,7 @@ class PokemonCatchWorker(BaseTask):
                      [self.bot.gd_web_path2, '']]
 
         for web_path in web_paths:
-            if web_path[0] !== '':
+            if web_path[0] != '':
                 user_web_catchable = os.path.join(web_path[0], web_path[1], 'catchable-{}.json'.format(self.bot.config.username))
 
                 try:

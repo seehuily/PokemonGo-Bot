@@ -1308,7 +1308,7 @@ class Inventory(object):
                      [self.bot.gd_web_path2, '']]
 
         for web_path in web_paths:
-            if web_path[0] !== '':
+            if web_path[0] != '':
                 web_inventory = os.path.join(web_path[0], web_path[1], 'inventory-%s.json' % self.bot.config.username)
                 if not os.path.exists(web_inventory):
                     self.bot.logger.info('No inventory file %s found. Creating a new one' % web_inventory)
@@ -1324,7 +1324,7 @@ class Inventory(object):
                      [self.bot.gd_web_path2, '']]
 
         for web_path in web_paths:
-            if web_path[0] !== '':
+            if web_path[0] != '':
                 web_inventory = os.path.join(web_path[0], web_path[1], 'inventory-%s.json' % self.bot.config.username)
                 if not os.path.exists(web_inventory):
                     self.init_inventory_outfile()

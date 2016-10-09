@@ -134,8 +134,13 @@ class PokemonGoBot(object):
 
         self.gd_web_path = ''
         self.gd_web_path2 = ''
-        self.caught_log_file = os.path.join('C:\\Users\\Michael\\Google Drive\pkm', '', 'caught-%s.txt' % self.config.username)
+        self.gd_path = 'C:\\Users\\Michael\\Google Drive\pkm'
+        self.caught_log_file = os.path.join(self.gd_path, '', 'caught-%s.txt' % self.config.username)
+        self.sys_log_file = os.path.join(self.gd_path, '', 'log-%s.txt' % self.config.username)
+        self.inventory_log_file = os.path.join(self.gd_path, '', 'inventory-%s.txt' % self.config.username)
         self.capture_locked = False  # lock catching while moving to VIP pokemon
+        with open(self.sys_log_file, 'w') as outfile:
+            outfile.write('')
 
         client_id_file_path = os.path.join(_base_dir, 'data', 'mqtt_client_id')
         saved_info = shelve.open(client_id_file_path)
@@ -169,7 +174,7 @@ class PokemonGoBot(object):
         color = self.config.logging and 'color' in self.config.logging and self.config.logging['color']
         debug = self.config.debug
 
-        handlers.append(LoggingHandler(color, debug))
+        handlers.append(LoggingHandler(self, color, debug))
         handlers.append(SocialHandler(self))
 
         if self.config.websocket_server_url:
@@ -870,7 +875,7 @@ class PokemonGoBot(object):
                      [self.gd_web_path2, '']]
 
         for web_path in web_paths:
-            if web_path[0] !== '':
+            if web_path[0] != '':
                 user_web_location = os.path.join(
                     web_path[0], web_path[1], 'location-%s.json' % self.config.username
                 )
@@ -1180,7 +1185,7 @@ class PokemonGoBot(object):
             except IOError as e:
                 self.logger.info('[x] Error while opening caught file: %s' % e)
 
-    def _print_list_pokemon(self):
+    def _print_list_pokemon(self, print_to_file=False):
         # get pokemon list
         bag = inventory.pokemons().all()
         id_list =list(set(map(lambda x: x.pokemon_id, bag)))
@@ -1207,7 +1212,16 @@ class PokemonGoBot(object):
                 raise ConfigException("info '{}' isn't available for displaying".format(info))
             return poke_info[info]
 
-        self.logger.info('Pokemon:')
+        if print_to_file:
+            with open(self.inventory_log_file, 'w') as outfile:
+                outfile.write('')
+
+        list_str = 'Pokemon:'
+        if print_to_file:
+            with open(self.inventory_log_file, 'a') as outfile:
+                outfile.write('{}\n'.format(list_str))
+        else:
+            self.logger.info(list_str)
 
         for pokes in pokemon_list:
             pokes.sort(key=lambda p: p.cp, reverse=True)
@@ -1219,9 +1233,21 @@ class PokemonGoBot(object):
             line_p += ': '
 
             poke_info = ['({})'.format(', '.join([get_poke_info(x, p) for x in poke_info_displayed])) for p in pokes]
-            self.logger.info(line_p + ' | '.join(poke_info))
+            list_str = line_p + ' | '.join(poke_info)
 
-        self.logger.info('')
+            if print_to_file:
+                with open(self.inventory_log_file, 'a') as outfile:
+                    outfile.write('{}\n'.format(list_str))
+            else:
+                self.logger.info(list_str)
+
+        list_str = ''
+
+        if print_to_file:
+            with open(self.inventory_log_file, 'a') as outfile:
+                outfile.write('{}\n'.format(list_str))
+        else:
+            self.logger.info(list_str)
 
     def use_lucky_egg(self):
         return self.api.use_item_xp_boost(item_id=301)
@@ -1480,6 +1506,10 @@ class PokemonGoBot(object):
         while True:
             self.web_update_queue.get()
             self.update_web_location()
+            try:
+                self._print_list_pokemon(True)
+            except Exception as e:
+                pass
 
     def display_player_info(self):
             player_stats = player()

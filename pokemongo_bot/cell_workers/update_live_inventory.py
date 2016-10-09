@@ -26,7 +26,7 @@ class UpdateLiveInventory(BaseTask):
                    in seconds (defaults to 120 seconds).
                    The update interval cannot be accurate as workers run synchronously.
     show_all_multiple_lines : Logs all items on inventory using multiple lines.
-                              Ignores configuration of 'items' 
+                              Ignores configuration of 'items'
     items : An array of items to display and their display order (implicitly),
             see available items below (defaults to []).
 
@@ -208,7 +208,7 @@ class UpdateLiveInventory(BaseTask):
                 inventory.get_pokemon_inventory_size()
             )
         )
-		
+
         self.logger.info(
             'Items: {}/{}'.format(
                 self.inventory.get_space_used(),

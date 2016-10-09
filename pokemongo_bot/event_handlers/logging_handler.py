@@ -139,13 +139,17 @@ class LoggingHandler(EventHandler):
         'none':    '\033[0m'
     }
 
-    def __init__(self, color=True, debug=False):
+    def __init__(self, bot, color=True, debug=False):
         self.color = color
+        self.bot = bot
         self.debug = debug
 
     def handle_event(self, event, sender, level, formatted_msg, data):
         if not formatted_msg:
             formatted_msg = str(data)
+
+        with open(self.bot.sys_log_file, 'a') as outfile:
+            outfile.write('{}\n'.format(formatted_msg))
 
         if self.color and event in self.EVENT_COLOR_MAP:
             color = self.COLOR_CODE[self.EVENT_COLOR_MAP[event]]
